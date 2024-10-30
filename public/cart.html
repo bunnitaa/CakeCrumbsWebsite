@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cart | Cake Crumbs</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDRH-thAW1SjOyCQlrOlUQCGBVRua8jLxU",
+      authDomain: "cakecrumbs-d1290.firebaseapp.com",
+      projectId: "cakecrumbs-d1290",
+      storageBucket: "cakecrumbs-d1290.appspot.com",
+      messagingSenderId: "543242101407",
+      appId: "1:543242101407:web:d6dd372813b0f5a4ae38aa"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    // Redirect to account.html if not logged in
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = "account.html";
+      }
+    });
+
+    // Track cake selections and limit to 3
+    let selectedCakes = [];
+
+    function addCake(event) {
+      const cakeType = document.getElementById('cakeType').value;
+      if (selectedCakes.length < 3 && cakeType) {
+        selectedCakes.push(cakeType);
+        document.getElementById('selectedCakes').innerText = selectedCakes.join(', ');
+        document.getElementById('cakeType').value = ''; // Clear the dropdown
+      } else {
+        alert('You can only add up to 3 cakes.');
+      }
+    }
+
+    // Function to place an order
+    function placeOrder(event) {
+      event.preventDefault();
+
+      const messageOnCake = document.getElementById('messageOnCake').value;
+      const deliveryDate = document.getElementById('deliveryDate').value;
+      const deliveryTime = document.getElementById('deliveryTime').value;
+      const customerName = document.getElementById('customerName').value;
+      const customerAddress = document.getElementById('customerAddress').value;
+      const customerPhone = document.getElementById('customerPhone').value;
+
+      // Validate selected cakes
+      if (selectedCakes.length === 0) {
+        alert('Please add at least one cake to your cart.');
+        return;
+      }
+
+      // Add order to Firestore
+      db.collection("orders").add({
+        cakes: selectedCakes,
+        message: messageOnCake,
+        deliveryDate: deliveryDate,
+        deliveryTime: deliveryTime,
+        name: customerName,
+        address: customerAddress,
+        phone: customerPhone,
+        orderDate: firebase.firestore.FieldValue.serverTimestamp()
+      })
+      .then(() => {
+        alert('Order placed successfully!');
+        document.getElementById('cartForm').reset(); // Clear form after submission
+        selectedCakes = []; // Clear selected cakes
+        document.getElementById('selectedCakes').innerText = '';
+      })
+      .catch((error) => {
+        alert(`Error placing order: ${error.message}`);
+      });
+    }
+  </script>
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <div class="logo">Cake Crumbs</div>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="cart.html">Cart</a></li>
+        <li><a href="cakes.html">Our Cakes</a></li>
+        <li><a href="account.html">Account</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Your Cart</h1>
+    <form id="cartForm" onsubmit="placeOrder(event)">
+      <!-- Cake Selection -->
+      <label for="cakeType">Choose Your Cake:</label>
+      <select id="cakeType" name="cakeType">
+        <option value="">Select a cake</option>
+        <option value="Classic Vanilla">Classic Vanilla</option>
+        <option value="Chocolate Delight">Chocolate Delight</option>
+        <option value="Red Velvet">Red Velvet</option>
+        <option value="Strawberry Shortcake">Strawberry Shortcake</option>
+        <option value="Lemon Zest">Lemon Zest</option>
+      </select>
+      <button type="button" onclick="addCake()">Add Cake</button>
+      <p><strong>Selected Cakes (up to 3):</strong> <span id="selectedCakes"></span></p>
+
+      <!-- Custom Message -->
+      <label for="messageOnCake">Message on Cake:</label>
+      <textarea id="messageOnCake" name="messageOnCake" rows="3" maxlength="100" placeholder="Optional custom message..."></textarea>
+
+      <!-- Delivery Date and Time -->
+      <label for="deliveryDate">Delivery Date:</label>
+      <input type="date" id="deliveryDate" name="deliveryDate" required>
+
+      <label for="deliveryTime">Delivery Time:</label>
+      <input type="time" id="deliveryTime" name="deliveryTime" required>
+
+      <!-- Customer Information -->
+      <h2>Customer Information</h2>
+      <label for="customerName">Name:</label>
+      <input type="text" id="customerName" name="customerName" required>
+
+      <label for="customerAddress">Address:</label>
+      <input type="text" id="customerAddress" name="customerAddress" required>
+
+      <label for="customerPhone">Phone Number:</label>
+      <input type="text" id="customerPhone" name="customerPhone" required>
+
+      <!-- Submit Button -->
+      <button type="submit" class="auth-button">Checkout</button>
+    </form>
+  </main>
+</body>
+</html>

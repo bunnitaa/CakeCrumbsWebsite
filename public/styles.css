@@ -1,0 +1,215 @@
+/* Global Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Header */
+header {
+    background-color: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px 40px;
+    position: fixed; /* Fixed header */
+    width: 100%;
+    top: 0;
+    z-index: 100;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+}
+
+.nav-links li a {
+    text-decoration: none;
+    color: #333;
+    font-size: 18px;
+}
+
+/* Main Content */
+main {
+    padding-top: 100px; /* Space for fixed header */
+    flex: 1; /* Allow main content to grow */
+}
+
+/* Hero Section */
+.hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: 120px; /* Increase this value if the header height is larger */
+}
+
+.hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.hero p {
+    font-size: 1.25rem;
+    margin-bottom: 20px;
+}
+
+/* Center the image in the hero section */
+.hero-image {
+    width: 300px;
+    height: auto;
+    margin-bottom: 20px;
+}
+
+/* Button Styles */
+.button {
+    background-color: #e74c3c;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    font-size: 18px;
+    border-radius: 5px;
+    margin-top: 10px;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: #c0392b;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #f4f4f4;
+    margin-top: auto; /* Push footer to the bottom */
+}
+
+/* Authentication Section */
+.auth-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 80vh; /* Adjust height as needed */
+    text-align: center;
+}
+
+.auth-section form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.auth-button {
+    background-color: #e74c3c;
+    color: #fff;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Order Section */
+.order-section {
+    margin-top: 100px; /* Adjust as needed */
+    padding: 20px;
+    text-align: center;
+}
+
+h1 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+p {
+    margin-bottom: 20px;
+    font-size: 1.25rem;
+}
+
+/* Form Styling */
+.order-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.form-group {
+    width: 100%;
+    max-width: 400px;
+    text-align: left;
+}
+
+input,
+select,
+textarea {
+    width: 200px; /* Adjusted to make text boxes smaller */
+    padding: 5px; /* Reduced padding for a better fit */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+button.order-button {
+    background-color: #e74c3c;
+    color: white;
+    padding: 10px 20px;
+    font-size: 18px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button.order-button:hover {
+    background-color: #c0392b;
+}
+
+/* Cake Section Styles */
+.cakes-section {
+    text-align: center;
+    margin: 100px 0;
+}
+
+.cakes-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 40px;
+}
+
+.cake {
+    text-align: center;
+}
+
+.cake img {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+}
+
+.cake p {
+    font-size: 1.2rem;
+    margin-top: 10px;
+    font-weight: bold;
+}

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cake Crumbs | Home</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDRH-thAW1SjOyCQlrOlUQCGBVRua8jLxU",
+      authDomain: "cakecrumbs-d1290.firebaseapp.com",
+      projectId: "cakecrumbs-d1290",
+      storageBucket: "cakecrumbs-d1290.appspot.com",
+      messagingSenderId: "543242101407",
+      appId: "1:543242101407:web:d6dd372813b0f5a4ae38aa",
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    // Check if user is logged in
+    firebase.auth().onAuthStateChanged((user) => {
+      const greetingElement = document.getElementById('greeting');
+      if (user) {
+        greetingElement.innerHTML = `Hello, ${user.displayName || user.email}`; // Display username or email
+      }
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <div class="logo">Cake Crumbs</div>
+      <div id="greeting"></div> <!-- This will hold the greeting -->
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="cakes.html">Our Cakes</a></li>
+        <li><a href="account.html">Account</a></li>
+        <li><a href="cart.html">Cart</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>Welcome to Cake Crumbs!</h1>
+    <p>Discover the finest bento cakes and more, crafted with love.</p>
+    <!-- Adding the image in the center -->
+    <img src="images/cakes.jpg" alt="Delicious Bento Cake" class="hero-image">
+    <!-- Moving the buttons under the image -->
+    <div class="button-container">
+      <a href="order.html" class="button">Order Now</a>
+      <a href="cakes.html" class="button">Browse Our Cakes</a>
+      <a href="account.html" class="button">Sign Up / Login</a>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2024 Cake Crumbs | All Rights Reserved</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account | Cake Crumbs</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDRH-thAW1SjOyCQlrOlUQCGBVRua8jLxU",
+      authDomain: "cakecrumbs-d1290.firebaseapp.com",
+      projectId: "cakecrumbs-d1290",
+      storageBucket: "cakecrumbs-d1290.appspot.com",
+      messagingSenderId: "543242101407",
+      appId: "1:543242101407:web:d6dd372813b0f5a4ae38aa",
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    function checkUser() {
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          document.getElementById('userDetails').style.display = 'block';
+          document.getElementById('userName').innerText = user.displayName || user.email;
+          document.getElementById('userEmail').innerText = user.email;
+          document.getElementById('greeting').innerText = `Hello, ${user.displayName || user.email}`;
+          document.getElementById('loginSignupForm').style.display = 'none';
+          document.getElementById('updateSection').style.display = 'block';
+
+          // Fetch user data from Firestore
+          db.collection('users').doc(user.uid).get().then((doc) => {
+            if (doc.exists) {
+              const userData = doc.data();
+              document.getElementById('userAddress').innerText = userData.address;
+              document.getElementById('userPhone').innerText = userData.phone;
+            }
+          });
+        } else {
+          document.getElementById('userDetails').style.display = 'none';
+          document.getElementById('loginSignupForm').style.display = 'flex';
+          document.getElementById('updateSection').style.display = 'none';
+          document.getElementById('greeting').innerText = ''; // Clear greeting if not logged in
+        }
+      });
+    }
+
+    function logout() {
+      auth.signOut().then(() => {
+        alert('Logged out successfully!');
+        window.location.href = 'account.html';
+      }).catch((error) => {
+        alert(`Error: ${error.message}`);
+      });
+    }
+
+    function login(event) {
+      event.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+
+      auth.signInWithEmailAndPassword(email, password).then(() => {
+        alert('Logged in successfully!');
+        window.location.href = 'cakes.html';
+      }).catch((error) => {
+        alert(`Error: ${error.message}`);
+      });
+    }
+
+    function signup(event) {
+      event.preventDefault();
+      const name = document.getElementById('signupName').value;
+      const email = document.getElementById('signupEmail').value;
+      const address = document.getElementById('signupAddress').value;
+      const phone = document.getElementById('signupPhone').value;
+      const password = document.getElementById('signupPassword').value;
+
+      auth.createUserWithEmailAndPassword(email, password).then((userCredential) => {
+        const user = userCredential.user;
+        return user.updateProfile({
+          displayName: name
+        });
+      }).then(() => {
+        return db.collection('users').doc(auth.currentUser.uid).set({
+          name: name,
+          email: email,
+          address: address,
+          phone: phone
+        });
+      }).then(() => {
+        alert('Signup successful!');
+        window.location.href = 'cakes.html';
+      }).catch((error) => {
+        alert(`Error: ${error.message}`);
+      });
+    }
+
+    function updateEmail(event) {
+      event.preventDefault();
+      const newEmail = document.getElementById('newEmail').value;
+
+      const user = auth.currentUser;
+      user.updateEmail(newEmail).then(() => {
+        alert('Email updated successfully!');
+        document.getElementById('newEmail').value = '';
+        document.getElementById('userEmail').innerText = newEmail;
+      }).catch((error) => {
+        alert(`Error: ${error.message}`);
+      });
+    }
+
+    function updatePhone(event) {
+      event.preventDefault();
+      const newPhone = document.getElementById('newPhone').value;
+      const user = auth.currentUser;
+      return db.collection('users').doc(user.uid).update({
+        phone: newPhone
+      }).then(() => {
+        alert(`Phone number updated to: ${newPhone}`);
+        document.getElementById('newPhone').value = '';
+        document.getElementById('userPhone').innerText = newPhone; // Update displayed phone
+      }).catch((error) => {
+        alert(`Error: ${error.message}`);
+      });
+    }
+
+    function changePassword(event) {
+      event.preventDefault();
+      const newPassword = document.getElementById('newPassword').value;
+
+      const user = auth.currentUser;
+      user.updatePassword(newPassword).then(() => {
+        alert('Password changed successfully!');
+        document.getElementById('newPassword').value = '';
+      }).catch((error) => {
+        alert(`Error: ${error.message}`);
+      });
+    }
+
+    window.onload = checkUser;
+  </script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      min-height: 100vh; 
+      margin: 0; 
+    }
+
+    .user-details, .update-section {
+      margin: 20px;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+      width: 100%; 
+      max-width: 600px; 
+    }
+
+    .auth-button {
+      margin-top: 10px;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .auth-button:hover {
+      background-color: #45a049;
+    }
+
+    .logout-button {
+      background-color: #f44336;
+    }
+
+    .logout-button:hover {
+      background-color: #e53935;
+    }
+
+    a {
+      display: inline-block;
+      margin-top: 10px;
+      color: #007BFF;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .login-signup-container {
+      display: flex; 
+      justify-content: space-between; 
+      flex-wrap: wrap; 
+      width: 100%; 
+      max-width: 600px; 
+    }
+
+    .form-container {
+      flex: 1; 
+      margin: 10px; 
+      min-width: 250px; 
+    }
+
+    .form-container h2 {
+      margin-top: 0; 
+    }
+
+    .form-container form {
+      display: flex; 
+      flex-direction: column; 
+    }
+
+    .form-container label {
+      margin-bottom: 5px; 
+    }
+
+    .form-container input {
+      margin-bottom: 10px; 
+      padding: 10px; 
+      border: 1px solid #ccc; 
+      border-radius: 5px; 
+    }
+
+    .update-section form {
+      margin-bottom: 20px; 
+    }
+
+    #greeting {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+
+    footer {
+      margin-top: auto; /* Pushes footer to the bottom */
+      padding: 10px 0;
+      text-align: center;
+      background-color: #f1f1f1; /* Optional: gives footer a background color */
+      width: 100%; /* Makes footer span the full width */
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <div class="logo">Cake Crumbs</div>
+      <div id="greeting"></div>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="cakes.html">Our Cakes</a></li>
+        <li><a href="account.html">Account</a></li>
+        <li><a href="cart.html">Cart</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <div id="userDetails" class="user-details" style="display: none;">
+      <h2>User Details</h2>
+      <p><strong>Name:</strong> <span id="userName"></span></p>
+      <p><strong>Email:</strong> <span id="userEmail"></span></p>
+      <p><strong>Address:</strong> <span id="userAddress"></span></p>
+      <p><strong>Phone:</strong> <span id="userPhone"></span></p>
+      <button class="auth-button logout-button" onclick="logout()">Logout</button>
+    </div>
+
+    <div id="loginSignupForm" class="login-signup-container" style="display: flex;">
+      <div class="form-container">
+        <h2>Login</h2>
+        <form onsubmit="login(event)">
+          <label for="loginEmail">Email:</label>
+          <input type="email" id="loginEmail" required>
+          <label for="loginPassword">Password:</label>
+          <input type="password" id="loginPassword" required>
+          <button type="submit" class="auth-button">Login</button>
+        </form>
+      </div>
+      <div class="form-container">
+        <h2>Sign Up</h2>
+        <form onsubmit="signup(event)">
+          <label for="signupName">Name:</label>
+          <input type="text" id="signupName" required>
+          <label for="signupEmail">Email:</label>
+          <input type="email" id="signupEmail" required>
+          <label for="signupAddress">Address:</label>
+          <input type="text" id="signupAddress" required>
+          <label for="signupPhone">Phone:</label>
+          <input type="text" id="signupPhone" required>
+          <label for="signupPassword">Password:</label>
+          <input type="password" id="signupPassword" required>
+          <button type="submit" class="auth-button">Sign Up</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="updateSection" class="update-section" style="display: none;">
+      <h2>Update Account</h2>
+      <form onsubmit="updateEmail(event)">
+        <label for="newEmail">New Email:</label>
+        <input type="email" id="newEmail">
+        <button type="submit" class="auth-button">Update Email</button>
+      </form>
+      <form onsubmit="updatePhone(event)">
+        <label for="newPhone">New Phone:</label>
+        <input type="text" id="newPhone">
+        <button type="submit" class="auth-button">Update Phone</button>
+      </form>
+      <form onsubmit="changePassword(event)">
+        <label for="newPassword">New Password:</label>
+        <input type="password" id="newPassword">
+        <button type="submit" class="auth-button">Change Password</button>
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2024 Cake Crumbs. All rights reserved.</p>
+  </footer>
+</body>
+</html>

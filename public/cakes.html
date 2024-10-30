@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cake Crumbs | Our Cakes</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <nav class="navbar">
+      <div class="logo">Cake Crumbs</div>
+      <div id="greeting"></div> <!-- This will hold the greeting -->
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="cakes.html">Our Cakes</a></li>
+        <li><a href="account.html">Account</a></li>
+        <li><a href="cart.html">Cart</a></li>
+      </ul>
+    </nav>
+  </header>
+  
+  <script>
+    // Check if user is logged in
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        const greetingElement = document.getElementById('greeting');
+        greetingElement.innerHTML = `Hello, ${user.displayName || user.email}`; // Display username or email
+      }
+    });
+  </script>
+
+  <section class="cakes-section">
+    <h1>Our Bento Cakes</h1>
+    <div class="cakes-grid">
+      <!-- Existing Cakes -->
+      <div class="cake">
+        <img src="images/chocolate.jpg" alt="Chocolate Cake">
+        <p>Chocolate Delight</p>
+      </div>
+      <div class="cake">
+        <img src="images/strawberry.jpg" alt="Strawberry Cake">
+        <p>Strawberry Dream</p>
+      </div>
+      <div class="cake">
+        <img src="images/vanilla.jpg" alt="Vanilla Cake">
+        <p>Vanilla Classic</p>
+      </div>
+      
+      <!-- New Flavors -->
+      <div class="cake">
+        <img src="images/matcha.jpg" alt="Matcha Cake">
+        <p>Matcha Bliss</p>
+      </div>
+      <div class="cake">
+        <img src="images/caramel.jpg" alt="Caramel Cake">
+        <p>Caramel Indulgence</p>
+      </div>
+      <div class="cake">
+        <img src="images/carrot.jpg" alt="Carrot Cake">
+        <p>Carrot Treat</p>
+      </div>
+      <div class="cake">
+        <img src="images/cherry.jpg" alt="Cherry Cake">
+        <p>Cherry Bomb</p>
+      </div>
+      <div class="cake">
+        <img src="images/grape.jpg" alt="Grape Cake">
+        <p>Grape Paradise</p>
+      </div>
+      <div class="cake">
+        <img src="images/lemon.jpg" alt="Lemon Cake">
+        <p>Lemon Sensation</p>
+      </div>
+      <div class="cake">
+        <img src="images/mango.jpg" alt="Mango Cake">
+        <p>Mango Magic</p>
+      </div>
+      <div class="cake">
+        <img src="images/peach.jpg" alt="Peach Cake">
+        <p>Peach Love</p>
+      </div>
+      <div class="cake">
+        <img src="images/pumpkin.jpg" alt="Pumpkin Cake">
+        <p>Pumpkin Spice</p>
+      </div>
+      <div class="cake">
+        <img src="images/redvelvet.jpg" alt="Red Velvet Cake">
+        <p>Red Velvet</p>
+      </div>
+      <div class="cake">
+        <img src="images/taro.jpg" alt="Taro Cake">
+        <p>Taro Tart</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>&copy; 2024 Cake Crumbs | All Rights Reserved</p>
+  </footer>
+</body>
+</html>

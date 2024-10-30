@@ -12,6 +12,8 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "express": "^4.21.0",
+    "firebase": "^10.13.2",
+    "firebase-admin": "^12.5.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.6.3",
     "react": "^18.3.1",
