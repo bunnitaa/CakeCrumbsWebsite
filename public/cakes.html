@@ -5,180 +5,258 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Our Cakes | Cake Crumbs</title>
   <link rel="stylesheet" href="styles.css">
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <style>
+    .cakes-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr); /* 3 cakes per row */
+      gap: 20px;
+      padding: 20px;
+    }
+    .cake-item {
+      border: 1px solid #ddd;
+      padding: 20px;
+      text-align: center;
+      background-color: #f9f9f9;
+    }
+    .cake-item img {
+      width: 100%;
+      height: auto;
+    }
+    .cake-item h2 {
+      font-size: 1.5rem;
+      color: #333;
+    }
+    .cake-item p {
+      color: #777;
+    }
+    .cake-item button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .cake-item button:hover {
+      background-color: #45a049;
+    }
+  </style>
 </head>
 <body>
+
+  <!-- Navbar -->
   <header>
     <nav class="navbar">
       <div class="logo">Cake Crumbs</div>
+      <div id="greeting"></div>
       <ul class="nav-links">
         <li><a href="index.html">Home</a></li>
         <li><a href="cakes.html">Our Cakes</a></li>
         <li><a href="account.html">Account</a></li>
         <li><a href="cart.html">Cart</a></li>
       </ul>
+      <div class="search-filter">
+        <input type="text" id="search" placeholder="Search cakes...">
+        <select id="filter">
+          <option value="all">All Cakes</option>
+          <option value="flavored">Flavored Cakes</option>
+          <option value="fruit">Fruit Cakes</option>
+          <option value="spiced">Spiced Cakes</option>
+        </select>
+      </div>
     </nav>
   </header>
 
+  <!-- Main Content -->
   <main>
-    <h1>Our Cakes</h1>
-    <div id="cakesList" class="cakes-list">
-      <!-- Cakes will be loaded here -->
+    <div class="cakes-container">
+      <!-- Cake 1 -->
+      <div class="cake-item">
+        <img src="images/chocolate.jpg" alt="Chocolate Delight">
+        <h2>Chocolate Delight</h2>
+        <p>Rich and decadent chocolate cake.</p>
+        <p class="ingredients"><strong>Ingredients:</strong> Flour, Sugar, Eggs, Milk, Butter, Chocolate</p>
+        <p><strong>$29.99</strong></p>
+        <a href="cart.html"><button>Add to Cart</button></a>
+      </div>
+
+      <!-- Cake 2 -->
+      <div class="cake-item">
+        <img src="images/strawberry.jpg" alt="Strawberry Dream">
+        <h2>Strawberry Dream</h2>
+        <p>Light and fluffy strawberry-infused cake.</p>
+        <p class="ingredients"><strong>Ingredients:</strong> Flour, Sugar, Eggs, Milk, Butter, Strawberries</p>
+        <p><strong>$29.99</strong></p>
+        <a href="cart.html"><button>Add to Cart</button></a>
+      </div>
+
+      <!-- Cake 3 -->
+      <div class="cake-item">
+        <img src="images/vanilla.jpg" alt="Vanilla Classic">
+        <h2>Vanilla Classic</h2>
+        <p>Pure and classic vanilla flavor.</p>
+        <p class="ingredients"><strong>Ingredients:</strong> Flour, Sugar, Eggs, Milk, Butter, Vanilla</p>
+        <p><strong>$29.99</strong></p>
+        <a href="cart.html"><button>Add to Cart</button></a>
+      </div>
+
+      <!-- Cake 4 -->
+      <div class="cake-item">
+        <img src="images/matcha.jpg" alt="Matcha Bliss">
+        <h2>Matcha Bliss</h2>
+        <p>Delicate matcha flavor in a soft cake.</p>
+        <p class="ingredients"><strong>Ingredients:</strong> Flour, Sugar, Eggs, Milk, Butter, Matcha</p>
+        <p><strong>$29.99</strong></p>
+        <a href="cart.html"><button>Add to Cart</button></a>
+      </div>
+
+      <!-- Cake 5 -->
+      <div class="cake-item">
+        <img src="images/mango.jpg" alt="Mango Magic">
+        <h2>Mango Magic</h2>
+        <p>Tropical mango flavor in a light sponge.</p>
+        <p class="ingredients"><strong>Ingredients:</strong> Flour, Sugar, Eggs, Milk, Butter, Mango</p>
+        <p><strong>$29.99</strong></p>
+        <a href="cart.html"><button>Add to Cart</button></a>
+      </div>
+
+      <!-- Cake 6 -->
+      <div class="cake-item">
+        <img src="images/peach.jpg" alt="Peach Cake">
+        <h2>Peach Cake</h2>
+        <p>Refreshing peach flavor in a soft cake.</p>
+        <p class="ingredients"><strong>Ingredients:</strong> Flour, Sugar, Eggs, Milk, Butter, Peaches</p>
+        <p><strong>$29.99</strong></p>
+        <a href="cart.html"><button>Add to Cart</button></a>
+      </div>
+
+      <!-- Cake 7 -->
+      <div class="cake-item">
+        <img src="images/pumpkin.jpg" alt="Pumpkin Spice">
+        <h2>Pumpkin Spice</h2>
+        <p>Warm and cozy pumpkin spice cake.</p>
+        <p class="ingredients"><strong>Ingredients:</strong> Flour, Sugar, Eggs, Milk, Butter, Pumpkin</p>
+        <p><strong>$29.99</strong></p>
+        <a href="cart.html"><button>Add to Cart</button></a>
+      </div>
+
+      <!-- Cake 8 -->
+      <div class="cake-item">
+        <img src="images/carrot.jpg" alt="Carrot Treat">
+        <h2>Carrot Treat</h2>
+        <p>Sweet and spiced carrot cake.</p>
+        <p class="ingredients"><strong>Ingredients:</strong> Flour, Sugar, Eggs, Milk, Butter, Carrot</p>
+        <p><strong>$29.99</strong></p>
+        <a href="cart.html"><button>Add to Cart</button></a>
+      </div>
+
+      <!-- Cake 9 -->
+      <div class="cake-item">
+        <img src="images/cherry.jpg" alt="Cherry Bomb">
+        <h2>Cherry Bomb</h2>
+        <p>Sweet cherries bursting with flavor.</p>
+        <p class="ingredients"><strong>Ingredients:</strong> Flour, Sugar, Eggs, Milk, Butter, Cherry</p>
+        <p><strong>$29.99</strong></p>
+        <a href="cart.html"><button>Add to Cart</button></a>
+      </div>
+
+      <!-- Cake 10 -->
+      <div class="cake-item">
+        <img src="images/taro.jpg" alt="Taro Tart">
+        <h2>Taro Tart</h2>
+        <p>Exotic taro flavor in a tart crust.</p>
+        <p class="ingredients"><strong>Ingredients:</strong> Flour, Sugar, Eggs, Milk, Butter, Taro</p>
+        <p><strong>$29.99</strong></p>
+        <a href="cart.html"><button>Add to Cart</button></a>
+      </div>
+
+      <!-- Cake 11 -->
+      <div class="cake-item">
+        <img src="images/redvelvet.jpg" alt="Red Velvet Cake">
+        <h2>Red Velvet Cake</h2>
+        <p>A classic favorite with cream cheese frosting.</p>
+        <p class="ingredients"><strong>Ingredients:</strong> Flour, Sugar, Eggs, Milk, Butter, Red Velvet</p>
+        <p><strong>$29.99</strong></p>
+        <a href="cart.html"><button>Add to Cart</button></a>
+      </div>
+
+      <!-- Cake 12 -->
+      <div class="cake-item">
+        <img src="images/grape.jpg" alt="Grape Paradise">
+        <h2>Grape Paradise</h2>
+        <p>Sweet and tangy grape flavor in a moist cake.</p>
+        <p class="ingredients"><strong>Ingredients:</strong> Flour, Sugar, Eggs, Milk, Butter, Grapes</p>
+        <p><strong>$29.99</strong></p>
+        <a href="cart.html"><button>Add to Cart</button></a>
+      </div>
+
+      <!-- Cake 13 -->
+      <div class="cake-item">
+        <img src="images/coffee.jpg" alt="Coffee Craze">
+        <h2>Coffee Craze</h2>
+        <p>Rich coffee flavor to start your day.</p>
+        <p class="ingredients"><strong>Ingredients:</strong> Flour, Sugar, Eggs, Milk, Butter, Coffee</p>
+        <p><strong>$29.99</strong></p>
+        <a href="cart.html"><button>Add to Cart</button></a>
+      </div>
+
+      <!-- Cake 14 -->
+      <div class="cake-item">
+        <img src="images/blueberry.jpg" alt="Blueberry Delight">
+        <h2>Blueberry Delight</h2>
+        <p>Fresh blueberries baked into a delicious cake.</p>
+        <p class="ingredients"><strong>Ingredients:</strong> Flour, Sugar, Eggs, Milk, Butter, Blueberries</p>
+        <p><strong>$29.99</strong></p>
+        <a href="cart.html"><button>Add to Cart</button></a>
+      </div>
+
+      <!-- Cake 15 -->
+      <div class="cake-item">
+        <img src="images/berriesandcream.jpg" alt="Berries & Cream">
+        <h2>Berries & Cream</h2>
+        <p>Fresh berries with a creamy cake.</p>
+        <p class="ingredients"><strong>Ingredients:</strong> Flour, Sugar, Eggs, Milk, Butter, Berries</p>
+        <p><strong>$29.99</strong></p>
+        <a href="cart.html"><button>Add to Cart</button></a>
+      </div>
+
+      <!-- Cake 16 -->
+      <div class="cake-item">
+        <img src="images/lemon.jpg" alt="Lemon Sensation">
+        <h2>Lemon Sensation</h2>
+        <p>Refreshing and tangy lemon flavor.</p>
+        <p class="ingredients"><strong>Ingredients:</strong> Flour, Sugar, Eggs, Milk, Butter, Lemon</p>
+        <p><strong>$29.99</strong></p>
+        <a href="cart.html"><button>Add to Cart</button></a>
+      </div>
+
+      <!-- Cake 17 -->
+      <div class="cake-item">
+        <img src="images/banana.jpg" alt="Banana Bonanza">
+        <h2>Banana Bonanza</h2>
+        <p>Sweet banana flavor in every bite.</p>
+        <p class="ingredients"><strong>Ingredients:</strong> Flour, Sugar, Eggs, Milk, Butter, Banana</p>
+        <p><strong>$29.99</strong></p>
+        <a href="cart.html"><button>Add to Cart</button></a>
+      </div>
+
+      <!-- Cake 18 -->
+      <div class="cake-item">
+        <img src="images/caramel.jpg" alt="Caramel Indulgence">
+        <h2>Caramel Indulgence</h2>
+        <p>Rich caramel flavor with a creamy finish.</p>
+        <p class="ingredients"><strong>Ingredients:</strong> Flour, Sugar, Eggs, Milk, Butter, Caramel</p>
+        <p><strong>$29.99</strong></p>
+        <a href="cart.html"><button>Add to Cart</button></a>
+      </div>
     </div>
   </main>
 
+  <!-- Footer -->
   <footer>
-    <p>&copy; 2024 Cake Crumbs | All Rights Reserved</p>
+    <p>&copy; 2024 Cake Crumbs. All rights reserved.</p>
   </footer>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDRH-thAW1SjOyCQlrOlUQCGBVRua8jLxU",
-      authDomain: "cakecrumbs-d1290.firebaseapp.com",
-      projectId: "cakecrumbs-d1290",
-      storageBucket: "cakecrumbs-d1290.appspot.com",
-      messagingSenderId: "543242101407",
-      appId: "1:543242101407:web:d6dd372813b0f5a4ae38aa",
-    };
-
-    firebase.initializeApp(firebaseConfig);
-
-    const cakes = [
-      { name: "Chocolate Delight", description: "Rich chocolate cake", ingredients: "Chocolate, flour, sugar", image: "chocolate.jpg" },
-      { name: "Strawberry Dream", description: "Fresh strawberry flavour", ingredients: "Strawberries, flour, sugar", image: "strawberry.jpg" },
-      { name: "Vanilla Classic", description: "Simple and classic", ingredients: "Vanilla, flour, sugar", image: "vanilla.jpg" },
-      { name: "Matcha Bliss", description: "Unique matcha flavour", ingredients: "Matcha, flour, sugar", image: "matcha.jpg" },
-      { name: "Caramel Indulgence", description: "Rich caramel treat", ingredients: "Caramel, flour, sugar", image: "caramel.jpg" },
-      { name: "Carrot Treat", description: "Fresh and healthy", ingredients: "Carrots, flour, sugar", image: "carrot.jpg" },
-      { name: "Cherry Bomb", description: "Cherry surprise", ingredients: "Cherries, flour, sugar", image: "cherry.jpg" },
-      { name: "Grape Paradise", description: "Delicious grape flavour", ingredients: "Grapes, flour, sugar", image: "grape.jpg" },
-      { name: "Lemon Sensation", description: "Zesty lemon taste", ingredients: "Lemon, flour, sugar", image: "lemon.jpg" },
-      { name: "Mango Magic", description: "Exotic mango flavour", ingredients: "Mango, flour, sugar", image: "mango.jpg" },
-      { name: "Taro Tart", description: "Taro twist", ingredients: "Taro, flour, sugar", image: "taro.jpg" },
-      { name: "Red Velvet", description: "Creamy velvety cocoa", ingredients: "Cocoa, flour, sugar", image: "redvelvet.jpg" },
-      { name: "Pumpkin Spice", description: "Spicy pumpkin flavour", ingredients: "Taro, flour, sugar", image: "taro.jpg" },
-      { name: "Peach Cake", description: "Sweet peach delight", ingredients: "Peach, flour, sugar", image: "peach.jpg" }
-    ];
-
-    const db = firebase.firestore();
-
-    function displayCakes() {
-      const cakesList = document.getElementById("cakesList");
-      cakesList.innerHTML = "";
-
-      cakes.forEach(cake => {
-        const cakeElement = document.createElement("div");
-        cakeElement.classList.add("cake-item");
-        cakeElement.innerHTML = `
-          <img src="images/${cake.image}" alt="${cake.name}">
-          <h3>${cake.name}</h3>
-          <p><strong>Description:</strong> ${cake.description}</p>
-          <p><strong>Ingredients:</strong> ${cake.ingredients}</p>
-          <p><strong>Price:</strong> $29.99</p>
-          <button onclick="addToCart('${cake.name}', '${cake.description}', '${cake.ingredients}', 29.99)">Add to Cart</button>
-        `;
-        cakesList.appendChild(cakeElement);
-      });
-    }
-
-    function addToCart(name, description, ingredients, price) {
-      const user = firebase.auth().currentUser;
-      if (!user) {
-        alert("You need to be logged in to add items to the cart.");
-        return;
-      }
-
-      const cartRef = db.collection("carts").doc(user.uid);
-
-      cartRef.get().then(doc => {
-        let cartData = { cakes: [], total: 0, userID: user.uid };
-
-        if (doc.exists) {
-          cartData = doc.data();
-        }
-
-        if (cartData.cakes.length >= 3) {
-          alert("You can add up to 3 cakes only.");
-          return;
-        }
-
-        cartData.cakes.push({ name, description, ingredients, price });
-        cartData.total += price;
-
-        cartRef.set(cartData)
-          .then(() => {
-            alert("Cake added to cart!");
-          })
-          .catch(error => {
-            console.error("Error adding to cart: ", error);
-          });
-      });
-    }
-
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        displayCakes();
-      } else {
-        window.location.href = "account.html";
-      }
-    });
-  </script>
-
-  <style>
-    .cakes-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .cake-item {
-      border: 1px solid #ccc;
-      padding: 15px;
-      border-radius: 8px;
-      width: calc(33.333% - 20px);
-      background-color: #f9f9f9;
-      text-align: center;
-    }
-
-    .cake-item img {
-      width: 200px; /* Fixed width */
-      height: 200px; /* Fixed height */
-      object-fit: cover; /* Maintains aspect ratio */
-      border-radius: 5px;
-    }
-
-    .cake-item button {
-      display: block;
-      width: 100%;
-      padding: 8px;
-      font-size: 14px;
-      color: #fff;
-      background-color: #333;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-
-    .cake-item button:hover {
-      background-color: #555;
-    }
-
-    @media (max-width: 768px) {
-      .cake-item {
-        width: calc(50% - 20px);
-      }
-    }
-
-    @media (max-width: 480px) {
-      .cake-item {
-        width: 100%;
-      }
-    }
-  </style>
+  <script src="scripts.js"></script>
 </body>
 </html>
