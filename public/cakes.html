@@ -59,7 +59,6 @@
       { name: "Taro Tart", description: "Taro twist", ingredients: "Taro, flour, sugar", image: "taro.jpg" },
       { name: "Red Velvet", description: "Creamy velvety cocoa", ingredients: "Cocoa, flour, sugar", image: "redvelvet.jpg" },
       { name: "Pumpkin Spice", description: "Spicy pumpkin flavour", ingredients: "Taro, flour, sugar", image: "taro.jpg" },
-      
       { name: "Peach Cake", description: "Sweet peach delight", ingredients: "Peach, flour, sugar", image: "peach.jpg" }
     ];
 
@@ -167,6 +166,18 @@
 
     .cake-item button:hover {
       background-color: #555;
+    }
+
+    @media (max-width: 768px) {
+      .cake-item {
+        width: calc(50% - 20px);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .cake-item {
+        width: 100%;
+      }
     }
   </style>
 </body>

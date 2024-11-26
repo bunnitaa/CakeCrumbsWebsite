@@ -2,3 +2,4 @@ node_modules/
 # Ignore sensitive files
 serviceAccountKey.json
 server.js
+.env

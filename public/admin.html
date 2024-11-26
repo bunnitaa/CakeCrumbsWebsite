@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Cake Crumbs</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+</head>
+
+<body>
+  <!-- Admin Panel Content -->
+  <div id="admin-panel" style="display:none;">
+    <h1>Admin Panel - Cake Crumbs</h1>
+
+    <!-- Cake Management -->
+    <section id="cake-management">
+      <h2>Manage Cakes</h2>
+      <button id="add-cake-btn">Add Cake</button>
+      <button id="edit-cake-btn">Edit Cake</button>
+      <button id="delete-cake-btn">Delete Cake</button>
+    </section>
+
+    <!-- User Management -->
+    <section id="user-management">
+      <h2>User Information</h2>
+      <table id="user-table">
+        <thead>
+          <tr>
+            <th>User ID</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- Order Management -->
+    <section id="order-management">
+      <h2>Manage Orders</h2>
+      <table id="order-table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Cakes Ordered</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </div>
+
+  <!-- Firebase Initialization -->
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDRH-thAW1SjOyCQlrOlUQCGBVRua8jLxU",
+      authDomain: "cakecrumbs-d1290.firebaseapp.com",
+      projectId: "cakecrumbs-d1290",
+      storageBucket: "cakecrumbs-d1290.firebasestorage.app",
+      messagingSenderId: "543242101407",
+      appId: "1:543242101407:web:d6dd372813b0f5a4ae38aa",
+      measurementId: "G-755838ERP4"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Check if the user is an admin
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        // Check if the user has the 'admin' role in Firestore
+        db.collection("users").doc(user.uid).get()
+          .then(doc => {
+            if (doc.exists && doc.data().role === "admin") {
+              // Show admin panel content
+              document.getElementById("admin-panel").style.display = "block";
+              loadUsers(); // Load user data
+              loadOrders(); // Load order data
+            } else {
+              // Not an admin, redirect to account page
+              window.location.href = 'account.html';
+            }
+          })
+          .catch((error) => {
+            console.error("Error getting user role:", error);
+          });
+      } else {
+        // No user is logged in, redirect to login page
+        window.location.href = 'account.html';
+      }
+    });
+
+    // Load all users into the admin panel
+    function loadUsers() {
+      const userTable = document.getElementById("user-table").getElementsByTagName('tbody')[0];
+      db.collection("users").get().then(snapshot => {
+        snapshot.forEach(doc => {
+          const row = userTable.insertRow();
+          const user = doc.data();
+          row.insertCell(0).textContent = doc.id;
+          row.insertCell(1).textContent = user.email;
+          row.insertCell(2).textContent = user.role;
+          const actionsCell = row.insertCell(3);
+          const promoteBtn = document.createElement("button");
+          promoteBtn.textContent = "Promote to Admin";
+          promoteBtn.onclick = () => promoteToAdmin(doc.id);
+          actionsCell.appendChild(promoteBtn);
+        });
+      });
+    }
+
+    // Promote user to admin
+    function promoteToAdmin(userId) {
+      db.collection("users").doc(userId).update({
+        role: "admin"
+      })
+        .then(() => {
+          alert("User promoted to admin");
+          window.location.reload();
+        })
+        .catch((error) => {
+          console.error("Error promoting user:", error);
+        });
+    }
+
+    // Load all orders into the admin panel
+    function loadOrders() {
+      const orderTable = document.getElementById("order-table").getElementsByTagName('tbody')[0];
+      db.collection("orders").get().then(snapshot => {
+        snapshot.forEach(doc => {
+          const order = doc.data();
+          const row = orderTable.insertRow();
+          row.insertCell(0).textContent = doc.id;
+          row.insertCell(1).textContent = order.cakes.join(", ");
+          row.insertCell(2).textContent = order.status;
+          const actionsCell = row.insertCell(3);
+          const updateStatusBtn = document.createElement("button");
+          updateStatusBtn.textContent = order.status === "in progress" ? "Mark as Done" : "Mark as In Progress";
+          updateStatusBtn.onclick = () => updateOrderStatus(doc.id, order.status);
+          actionsCell.appendChild(updateStatusBtn);
+        });
+      });
+    }
+
+    // Update order status (Done / In Progress)
+    function updateOrderStatus(orderId, currentStatus) {
+      const newStatus = currentStatus === "in progress" ? "done" : "in progress";
+      db.collection("orders").doc(orderId).update({
+        status: newStatus
+      })
+        .then(() => {
+          alert("Order status updated");
+          window.location.reload();
+        })
+        .catch((error) => {
+          console.error("Error updating order status:", error);
+        });
+    }
+
+    // Add new cake (example)
+    document.getElementById("add-cake-btn").addEventListener("click", () => {
+      const cakeName = prompt("Enter cake name");
+      const cakeDescription = prompt("Enter cake description");
+      const cakePrice = parseFloat(prompt("Enter cake price"));
+
+      db.collection("cakes").add({
+        name: cakeName,
+        description: cakeDescription,
+        price: cakePrice
+      })
+        .then(() => {
+          alert("Cake added successfully!");
+          window.location.reload();
+        })
+        .catch((error) => {
+          console.error("Error adding cake:", error);
+        });
+    });
+
+    // Edit cake (example)
+    document.getElementById("edit-cake-btn").addEventListener("click", () => {
+      const cakeId = prompt("Enter cake ID to edit");
+      const newName = prompt("Enter new cake name");
+      const newDescription = prompt("Enter new cake description");
+
+      db.collection("cakes").doc(cakeId).update({
+        name: newName,
+        description: newDescription
+      })
+        .then(() => {
+          alert("Cake updated successfully!");
+          window.location.reload();
+        })
+        .catch((error) => {
+          console.error("Error editing cake:", error);
+        });
+    });
+
+    // Delete cake (example)
+    document.getElementById("delete-cake-btn").addEventListener("click", () => {
+      const cakeId = prompt("Enter cake ID to delete");
+
+      db.collection("cakes").doc(cakeId).delete()
+        .then(() => {
+          alert("Cake deleted successfully!");
+          window.location.reload();
+        })
+        .catch((error) => {
+          console.error("Error deleting cake:", error);
+        });
+    });
+  </script>
+</body>
+
+</html>
