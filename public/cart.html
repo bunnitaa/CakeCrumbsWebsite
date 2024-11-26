@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,140 +7,258 @@
   <title>Cart | Cake Crumbs</title>
   <link rel="stylesheet" href="styles.css">
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-
-  <script>
-    // Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyDRH-thAW1SjOyCQlrOlUQCGBVRua8jLxU",
-      authDomain: "cakecrumbs-d1290.firebaseapp.com",
-      projectId: "cakecrumbs-d1290",
-      storageBucket: "cakecrumbs-d1290.appspot.com",
-      messagingSenderId: "543242101407",
-      appId: "1:543242101407:web:d6dd372813b0f5a4ae38aa"
-    };
-
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-
-    // Redirect to account.html if not logged in
-    auth.onAuthStateChanged(user => {
-      if (!user) {
-        window.location.href = "account.html";
-      }
-    });
-
-    // Track cake selections and limit to 3
-    let selectedCakes = [];
-
-    function addCake(event) {
-      const cakeType = document.getElementById('cakeType').value;
-      if (selectedCakes.length < 3 && cakeType) {
-        selectedCakes.push(cakeType);
-        document.getElementById('selectedCakes').innerText = selectedCakes.join(', ');
-        document.getElementById('cakeType').value = ''; // Clear the dropdown
-      } else {
-        alert('You can only add up to 3 cakes.');
-      }
-    }
-
-    // Function to place an order
-    function placeOrder(event) {
-      event.preventDefault();
-
-      const messageOnCake = document.getElementById('messageOnCake').value;
-      const deliveryDate = document.getElementById('deliveryDate').value;
-      const deliveryTime = document.getElementById('deliveryTime').value;
-      const customerName = document.getElementById('customerName').value;
-      const customerAddress = document.getElementById('customerAddress').value;
-      const customerPhone = document.getElementById('customerPhone').value;
-
-      // Validate selected cakes
-      if (selectedCakes.length === 0) {
-        alert('Please add at least one cake to your cart.');
-        return;
-      }
-
-      // Add order to Firestore
-      db.collection("orders").add({
-        cakes: selectedCakes,
-        message: messageOnCake,
-        deliveryDate: deliveryDate,
-        deliveryTime: deliveryTime,
-        name: customerName,
-        address: customerAddress,
-        phone: customerPhone,
-        orderDate: firebase.firestore.FieldValue.serverTimestamp()
-      })
-      .then(() => {
-        alert('Order placed successfully!');
-        document.getElementById('cartForm').reset(); // Clear form after submission
-        selectedCakes = []; // Clear selected cakes
-        document.getElementById('selectedCakes').innerText = '';
-      })
-      .catch((error) => {
-        alert(`Error placing order: ${error.message}`);
-      });
-    }
-  </script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
   <header>
     <nav class="navbar">
       <div class="logo">Cake Crumbs</div>
+      <div id="greeting"></div>
       <ul class="nav-links">
         <li><a href="index.html">Home</a></li>
-        <li><a href="cart.html">Cart</a></li>
         <li><a href="cakes.html">Our Cakes</a></li>
         <li><a href="account.html">Account</a></li>
+        <li><a href="cart.html">Cart</a></li>
       </ul>
     </nav>
   </header>
 
   <main>
     <h1>Your Cart</h1>
-    <form id="cartForm" onsubmit="placeOrder(event)">
-      <!-- Cake Selection -->
-      <label for="cakeType">Choose Your Cake:</label>
-      <select id="cakeType" name="cakeType">
-        <option value="">Select a cake</option>
-        <option value="Classic Vanilla">Classic Vanilla</option>
-        <option value="Chocolate Delight">Chocolate Delight</option>
-        <option value="Red Velvet">Red Velvet</option>
-        <option value="Strawberry Shortcake">Strawberry Shortcake</option>
-        <option value="Lemon Zest">Lemon Zest</option>
-      </select>
-      <button type="button" onclick="addCake()">Add Cake</button>
-      <p><strong>Selected Cakes (up to 3):</strong> <span id="selectedCakes"></span></p>
+    <div id="cartItems" class="cart-items">
+      <p>Loading cart items...</p>
+    </div>
+    <h2 id="totalPrice">Total: $0</h2>
 
-      <!-- Custom Message -->
-      <label for="messageOnCake">Message on Cake:</label>
-      <textarea id="messageOnCake" name="messageOnCake" rows="3" maxlength="100" placeholder="Optional custom message..."></textarea>
+    <!-- Optional Message and Pickup Date -->
+    <div class="order-details">
+      <label for="message">Message on Cake (optional):</label>
+      <input type="text" id="message" placeholder="Enter a special message">
+      
+      <label for="pickupDate">Pickup Date:</label>
+      <input type="date" id="pickupDate">
+    </div>
 
-      <!-- Delivery Date and Time -->
-      <label for="deliveryDate">Delivery Date:</label>
-      <input type="date" id="deliveryDate" name="deliveryDate" required>
-
-      <label for="deliveryTime">Delivery Time:</label>
-      <input type="time" id="deliveryTime" name="deliveryTime" required>
-
-      <!-- Customer Information -->
-      <h2>Customer Information</h2>
-      <label for="customerName">Name:</label>
-      <input type="text" id="customerName" name="customerName" required>
-
-      <label for="customerAddress">Address:</label>
-      <input type="text" id="customerAddress" name="customerAddress" required>
-
-      <label for="customerPhone">Phone Number:</label>
-      <input type="text" id="customerPhone" name="customerPhone" required>
-
-      <!-- Submit Button -->
-      <button type="submit" class="auth-button">Checkout</button>
-    </form>
+    <!-- Place Order Button -->
+    <button id="placeOrderBtn">Place Order</button>
   </main>
+
+  <footer>
+    <p>&copy; 2024 Cake Crumbs | All Rights Reserved</p>
+  </footer>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDRH-thAW1SjOyCQlrOlUQCGBVRua8jLxU",
+      authDomain: "cakecrumbs-d1290.firebaseapp.com",
+      projectId: "cakecrumbs-d1290",
+      storageBucket: "cakecrumbs-d1290.appspot.com",
+      messagingSenderId: "543242101407",
+      appId: "1:543242101407:web:d6dd372813b0f5a4ae38aa",
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        document.getElementById('greeting').textContent = `Hello, ${user.displayName || user.email}`;
+        loadCartItems(user.uid);
+      } else {
+        window.location.href = 'account.html';
+      }
+    });
+
+    const db = firebase.firestore();
+    const stripe = Stripe('pk_live_51QFjitEzu3GQRfJfs8OQxnanWrTPPuSa6nHL5qX0ZTs2vK8qAbbPX5Ir4M2gjJlddFrKbD5j6fEKr46Og5h8NxqB00NcJwZVw5');
+
+    function loadCartItems(userId) {
+      const cartItemsContainer = document.getElementById('cartItems');
+      cartItemsContainer.innerHTML = '';
+      let total = 0;
+
+      db.collection("carts").doc(userId).get().then((doc) => {
+        if (doc.exists) {
+          const data = doc.data();
+          
+          data.cakes.forEach((item) => {
+            total += item.price;
+
+            const itemElement = document.createElement('div');
+            itemElement.classList.add('cart-item');
+            itemElement.innerHTML = `
+              <h3>${item.name}</h3>
+              <p><strong>Description:</strong> ${item.description}</p>
+              <p><strong>Ingredients:</strong> ${item.ingredients}</p>
+              <p><strong>Price:</strong> $${item.price.toFixed(2)}</p>
+              <button class="remove-btn" data-name="${item.name}">Remove</button>
+            `;
+            cartItemsContainer.appendChild(itemElement);
+          });
+
+          document.getElementById('totalPrice').textContent = `Total: $${total.toFixed(2)}`;
+        } else {
+          cartItemsContainer.innerHTML = '<p>Your cart is empty.</p>';
+        }
+      }).catch((error) => {
+        console.error("Error loading cart items: ", error);
+        cartItemsContainer.innerHTML = '<p>Error loading cart items. Please try again.</p>';
+      });
+    }
+
+    document.getElementById("placeOrderBtn").addEventListener("click", placeOrder);
+
+    function placeOrder() {
+      const user = firebase.auth().currentUser;
+
+      if (!user) {
+        alert("You must be logged in to place an order.");
+        return;
+      }
+
+      const message = document.getElementById("message").value;
+      const pickupDate = document.getElementById("pickupDate").value;
+      const orderTime = new Date().toLocaleString();
+
+      db.collection("carts").doc(user.uid).get()
+        .then((doc) => {
+          if (!doc.exists || doc.data().cakes.length === 0) {
+            alert("Your cart is empty. Please add items to your cart before placing an order.");
+            return;
+          }
+
+          const data = doc.data();
+          const total = data.cakes.reduce((sum, item) => sum + item.price, 0);
+          
+          const orderData = {
+            cakes: JSON.stringify(data.cakes),
+            createdAt: new Date().toISOString(),
+            message: message || "",
+            orderTime: orderTime,
+            dateOfPickup: pickupDate,
+            userID: user.uid,
+            total: total.toFixed(2) // Store the total price as 'total'
+          };
+
+          db.collection("orders").add(orderData)
+            .then((docRef) => {
+              console.log("Order placed with ID: ", docRef.id);
+              alert("Your order has been placed!");
+              clearCart(user.uid);
+            })
+            .catch((error) => {
+              console.error("Error placing order: ", error);
+            });
+
+          createCheckoutSession(data.cakes);
+        })
+        .catch((error) => {
+          console.error("Error fetching cart items: ", error);
+        });
+    }
+
+    function createCheckoutSession(cakes) {
+      fetch('/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ cakes: cakes })
+      })
+      .then((response) => response.json())
+      .then((sessionId) => stripe.redirectToCheckout({ sessionId }))
+      .then((result) => {
+        if (result.error) {
+          alert(result.error.message);
+        }
+      })
+      .catch((error) => {
+        console.error("Error creating checkout session: ", error);
+      });
+    }
+
+    function clearCart(userId) {
+      db.collection("carts").doc(userId).delete().then(() => {
+        console.log("Cart cleared");
+        document.getElementById('cartItems').innerHTML = '<p>Your cart is empty.</p>';
+        document.getElementById('totalPrice').textContent = 'Total: $0';
+      }).catch((error) => {
+        console.error("Error clearing cart: ", error);
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('remove-btn')) {
+        const cakeName = e.target.dataset.name;
+        removeCakeFromCart(cakeName);
+      }
+    });
+
+    function removeCakeFromCart(cakeName) {
+      const user = firebase.auth().currentUser;
+
+      if (!user) {
+        alert("You must be logged in to remove an item.");
+        return;
+      }
+
+      db.collection("carts").doc(user.uid).get()
+        .then((doc) => {
+          if (doc.exists) {
+            const data = doc.data();
+            const updatedCakes = data.cakes.filter(item => item.name !== cakeName);
+            return db.collection("carts").doc(user.uid).update({ cakes: updatedCakes });
+          } else {
+            alert("Your cart is empty.");
+          }
+        })
+        .then(() => {
+          loadCartItems(user.uid);
+        })
+        .catch((error) => {
+          console.error("Error removing cake from cart: ", error);
+        });
+    }
+  </script>
+
+  <style>
+    .cart-items {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .cart-item {
+      border: 1px solid #ccc;
+      padding: 15px;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+    }
+
+    .order-details {
+      max-width: 600px;
+      margin: 20px auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #placeOrderBtn {
+      display: block;
+      width: 100%;
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 10px;
+      background-color: #4CAF50;
+      color: white;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
 </body>
 </html>

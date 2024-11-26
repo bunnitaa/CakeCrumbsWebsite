@@ -30,6 +30,80 @@
       }
     });
   </script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+    }
+
+    header {
+      background-color: #fff;
+      padding: 10px 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-links {
+      list-style-type: none;
+      display: flex;
+      gap: 15px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: #333;
+    }
+
+    .hero {
+      text-align: center;
+      padding: 50px;
+    }
+
+    .hero-image {
+      width: 300px; /* Adjust image size as needed */
+    }
+
+    .button-container {
+      margin-top: 20px;
+    }
+
+    .button {
+      background-color: #e67e22;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      text-decoration: none;
+      margin: 5px;
+    }
+
+    .button:hover {
+      background-color: #d35400;
+    }
+
+    .message {
+      margin-top: 20px;
+      font-size: 1em;
+      color: #555;
+    }
+
+    footer {
+      background-color: #f1f1f1;
+      text-align: center;
+      padding: 15px 0;
+      position: relative;
+      bottom: 0;
+      width: 100%;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -48,11 +122,12 @@
   <section class="hero">
     <h1>Welcome to Cake Crumbs!</h1>
     <p>Discover the finest bento cakes and more, crafted with love.</p>
-    <!-- Adding the image in the center -->
     <img src="images/cakes.jpg" alt="Delicious Bento Cake" class="hero-image">
-    <!-- Moving the buttons under the image -->
+    
+    <div class="message">Create an Account to Order.</div> <!-- Added message -->
+
     <div class="button-container">
-      <a href="order.html" class="button">Order Now</a>
+      <a href="cart.html" class="button">Order Now</a>
       <a href="cakes.html" class="button">Browse Our Cakes</a>
       <a href="account.html" class="button">Sign Up / Login</a>
     </div>

@@ -3,14 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cake Crumbs | Our Cakes</title>
+  <title>Our Cakes | Cake Crumbs</title>
   <link rel="stylesheet" href="styles.css">
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
 <body>
   <header>
     <nav class="navbar">
       <div class="logo">Cake Crumbs</div>
-      <div id="greeting"></div> <!-- This will hold the greeting -->
       <ul class="nav-links">
         <li><a href="index.html">Home</a></li>
         <li><a href="cakes.html">Our Cakes</a></li>
@@ -19,84 +21,153 @@
       </ul>
     </nav>
   </header>
-  
-  <script>
-    // Check if user is logged in
-    auth.onAuthStateChanged((user) => {
-      if (user) {
-        const greetingElement = document.getElementById('greeting');
-        greetingElement.innerHTML = `Hello, ${user.displayName || user.email}`; // Display username or email
-      }
-    });
-  </script>
 
-  <section class="cakes-section">
-    <h1>Our Bento Cakes</h1>
-    <div class="cakes-grid">
-      <!-- Existing Cakes -->
-      <div class="cake">
-        <img src="images/chocolate.jpg" alt="Chocolate Cake">
-        <p>Chocolate Delight</p>
-      </div>
-      <div class="cake">
-        <img src="images/strawberry.jpg" alt="Strawberry Cake">
-        <p>Strawberry Dream</p>
-      </div>
-      <div class="cake">
-        <img src="images/vanilla.jpg" alt="Vanilla Cake">
-        <p>Vanilla Classic</p>
-      </div>
-      
-      <!-- New Flavors -->
-      <div class="cake">
-        <img src="images/matcha.jpg" alt="Matcha Cake">
-        <p>Matcha Bliss</p>
-      </div>
-      <div class="cake">
-        <img src="images/caramel.jpg" alt="Caramel Cake">
-        <p>Caramel Indulgence</p>
-      </div>
-      <div class="cake">
-        <img src="images/carrot.jpg" alt="Carrot Cake">
-        <p>Carrot Treat</p>
-      </div>
-      <div class="cake">
-        <img src="images/cherry.jpg" alt="Cherry Cake">
-        <p>Cherry Bomb</p>
-      </div>
-      <div class="cake">
-        <img src="images/grape.jpg" alt="Grape Cake">
-        <p>Grape Paradise</p>
-      </div>
-      <div class="cake">
-        <img src="images/lemon.jpg" alt="Lemon Cake">
-        <p>Lemon Sensation</p>
-      </div>
-      <div class="cake">
-        <img src="images/mango.jpg" alt="Mango Cake">
-        <p>Mango Magic</p>
-      </div>
-      <div class="cake">
-        <img src="images/peach.jpg" alt="Peach Cake">
-        <p>Peach Love</p>
-      </div>
-      <div class="cake">
-        <img src="images/pumpkin.jpg" alt="Pumpkin Cake">
-        <p>Pumpkin Spice</p>
-      </div>
-      <div class="cake">
-        <img src="images/redvelvet.jpg" alt="Red Velvet Cake">
-        <p>Red Velvet</p>
-      </div>
-      <div class="cake">
-        <img src="images/taro.jpg" alt="Taro Cake">
-        <p>Taro Tart</p>
-      </div>
+  <main>
+    <h1>Our Cakes</h1>
+    <div id="cakesList" class="cakes-list">
+      <!-- Cakes will be loaded here -->
     </div>
-  </section>
+  </main>
 
   <footer>
     <p>&copy; 2024 Cake Crumbs | All Rights Reserved</p>
   </footer>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDRH-thAW1SjOyCQlrOlUQCGBVRua8jLxU",
+      authDomain: "cakecrumbs-d1290.firebaseapp.com",
+      projectId: "cakecrumbs-d1290",
+      storageBucket: "cakecrumbs-d1290.appspot.com",
+      messagingSenderId: "543242101407",
+      appId: "1:543242101407:web:d6dd372813b0f5a4ae38aa",
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    const cakes = [
+      { name: "Chocolate Delight", description: "Rich chocolate cake", ingredients: "Chocolate, flour, sugar", image: "chocolate.jpg" },
+      { name: "Strawberry Dream", description: "Fresh strawberry flavour", ingredients: "Strawberries, flour, sugar", image: "strawberry.jpg" },
+      { name: "Vanilla Classic", description: "Simple and classic", ingredients: "Vanilla, flour, sugar", image: "vanilla.jpg" },
+      { name: "Matcha Bliss", description: "Unique matcha flavour", ingredients: "Matcha, flour, sugar", image: "matcha.jpg" },
+      { name: "Caramel Indulgence", description: "Rich caramel treat", ingredients: "Caramel, flour, sugar", image: "caramel.jpg" },
+      { name: "Carrot Treat", description: "Fresh and healthy", ingredients: "Carrots, flour, sugar", image: "carrot.jpg" },
+      { name: "Cherry Bomb", description: "Cherry surprise", ingredients: "Cherries, flour, sugar", image: "cherry.jpg" },
+      { name: "Grape Paradise", description: "Delicious grape flavour", ingredients: "Grapes, flour, sugar", image: "grape.jpg" },
+      { name: "Lemon Sensation", description: "Zesty lemon taste", ingredients: "Lemon, flour, sugar", image: "lemon.jpg" },
+      { name: "Mango Magic", description: "Exotic mango flavour", ingredients: "Mango, flour, sugar", image: "mango.jpg" },
+      { name: "Taro Tart", description: "Taro twist", ingredients: "Taro, flour, sugar", image: "taro.jpg" },
+      { name: "Red Velvet", description: "Creamy velvety cocoa", ingredients: "Cocoa, flour, sugar", image: "redvelvet.jpg" },
+      { name: "Pumpkin Spice", description: "Spicy pumpkin flavour", ingredients: "Taro, flour, sugar", image: "taro.jpg" },
+      
+      { name: "Peach Cake", description: "Sweet peach delight", ingredients: "Peach, flour, sugar", image: "peach.jpg" }
+    ];
+
+    const db = firebase.firestore();
+
+    function displayCakes() {
+      const cakesList = document.getElementById("cakesList");
+      cakesList.innerHTML = "";
+
+      cakes.forEach(cake => {
+        const cakeElement = document.createElement("div");
+        cakeElement.classList.add("cake-item");
+        cakeElement.innerHTML = `
+          <img src="images/${cake.image}" alt="${cake.name}">
+          <h3>${cake.name}</h3>
+          <p><strong>Description:</strong> ${cake.description}</p>
+          <p><strong>Ingredients:</strong> ${cake.ingredients}</p>
+          <p><strong>Price:</strong> $29.99</p>
+          <button onclick="addToCart('${cake.name}', '${cake.description}', '${cake.ingredients}', 29.99)">Add to Cart</button>
+        `;
+        cakesList.appendChild(cakeElement);
+      });
+    }
+
+    function addToCart(name, description, ingredients, price) {
+      const user = firebase.auth().currentUser;
+      if (!user) {
+        alert("You need to be logged in to add items to the cart.");
+        return;
+      }
+
+      const cartRef = db.collection("carts").doc(user.uid);
+
+      cartRef.get().then(doc => {
+        let cartData = { cakes: [], total: 0, userID: user.uid };
+
+        if (doc.exists) {
+          cartData = doc.data();
+        }
+
+        if (cartData.cakes.length >= 3) {
+          alert("You can add up to 3 cakes only.");
+          return;
+        }
+
+        cartData.cakes.push({ name, description, ingredients, price });
+        cartData.total += price;
+
+        cartRef.set(cartData)
+          .then(() => {
+            alert("Cake added to cart!");
+          })
+          .catch(error => {
+            console.error("Error adding to cart: ", error);
+          });
+      });
+    }
+
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        displayCakes();
+      } else {
+        window.location.href = "account.html";
+      }
+    });
+  </script>
+
+  <style>
+    .cakes-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .cake-item {
+      border: 1px solid #ccc;
+      padding: 15px;
+      border-radius: 8px;
+      width: calc(33.333% - 20px);
+      background-color: #f9f9f9;
+      text-align: center;
+    }
+
+    .cake-item img {
+      width: 200px; /* Fixed width */
+      height: 200px; /* Fixed height */
+      object-fit: cover; /* Maintains aspect ratio */
+      border-radius: 5px;
+    }
+
+    .cake-item button {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      font-size: 14px;
+      color: #fff;
+      background-color: #333;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .cake-item button:hover {
+      background-color: #555;
+    }
+  </style>
 </body>
 </html>

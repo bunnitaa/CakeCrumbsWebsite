@@ -22,12 +22,71 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+
+    function createOrder(cakeId, quantity, message, dateTime) {
+    const user = auth.currentUser; // Get the current user
+    if (user) {
+      const orderData = {
+        userId: user.uid, // Store user ID in the order document
+        cakeId: cakeId,
+        quantity: quantity,
+        message: message,
+        dateTime: dateTime,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp() // Optional: Timestamp
+      };
+
+      // Add the order to the 'orders' collection
+      db.collection('orders').add(orderData)
+        .then(() => {
+          alert('Order created successfully!');
+        })
+        .catch((error) => {
+          alert(`Error creating order: ${error.message}`);
+        });
+    } else {
+      alert('User not logged in. Cannot create order.');
+    }
+  }
+
+  function fetchUserOrders() {
+    const user = auth.currentUser; // Get the current user
+    if (user) {
+      // Query orders collection where userId matches the current user's UID
+      db.collection('orders').where('userId', '==', user.uid).get()
+        .then((querySnapshot) => {
+          if (querySnapshot.empty) {
+            console.log('No orders found for this user.');
+            return;
+          }
+          querySnapshot.forEach((doc) => {
+            console.log('Order ID:', doc.id, '=>', doc.data());
+            // Process order data as needed
+          });
+        })
+        .catch((error) => {
+          console.error('Error fetching orders:', error);
+        });
+    } else {
+      console.log('User not logged in. Cannot fetch orders.');
+    }
+  }
+
+  // Example usage: Call this function after user signs up or logs in to display their orders
+  function displayUserOrders() {
+    fetchUserOrders();
+  }
+
+  window.onload = function() {
+    checkUser();
+    displayUserOrders(); // Fetch and display user orders on load
+  };
     function checkUser() {
       auth.onAuthStateChanged((user) => {
         if (user) {
           document.getElementById('userDetails').style.display = 'block';
           document.getElementById('userName').innerText = user.displayName || user.email;
           document.getElementById('userEmail').innerText = user.email;
+          document.getElementById('userUID').innerText = user.uid; // Display UID
           document.getElementById('greeting').innerText = `Hello, ${user.displayName || user.email}`;
           document.getElementById('loginSignupForm').style.display = 'none';
           document.getElementById('updateSection').style.display = 'block';
@@ -85,7 +144,8 @@
           displayName: name
         });
       }).then(() => {
-        return db.collection('users').doc(auth.currentUser.uid).set({
+        const uid = auth.currentUser.uid; // Get UID
+        return db.collection('users').doc(uid).set({
           name: name,
           email: email,
           address: address,
@@ -198,23 +258,51 @@
       text-decoration: underline;
     }
 
-    .login-signup-container {
-      display: flex; 
-      justify-content: space-between; 
-      flex-wrap: wrap; 
-      width: 100%; 
-      max-width: 600px; 
-    }
+      .login-signup-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    height: 100vh; /* Adjust as needed for your layout */
+  }
 
-    .form-container {
-      flex: 1; 
-      margin: 10px; 
-      min-width: 250px; 
-    }
+  .form-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center text and input fields */
+    width: 300px; /* Set a width for the form */
+    margin: 0 auto; /* Center the form horizontally */
+    padding: 20px;
+    border: 1px solid #ccc; /* Optional: Add a border */
+    border-radius: 5px; /* Optional: Round the corners */
+    background-color: #f9f9f9; /* Optional: Add background color */
+  }
 
-    .form-container h2 {
-      margin-top: 0; 
-    }
+  .form-container h2 {
+    text-align: center; /* Center the header text */
+  }
+
+  .form-container input {
+    width: 100%; /* Make input boxes take full width of the form */
+    padding: 10px; /* Add some padding for comfort */
+    margin: 10px 0; /* Add some margin between input fields */
+    border: 1px solid #ccc; /* Optional: Add border for input fields */
+    border-radius: 5px; /* Optional: Round the corners of input fields */
+  }
+
+  .auth-button {
+    width: 100%; /* Make buttons take full width of the form */
+    padding: 10px; /* Add some padding for comfort */
+    background-color: #4CAF50; /* Button color */
+    color: white; /* Button text color */
+    border: none; /* Remove border */
+    border-radius: 5px; /* Round corners */
+    cursor: pointer; /* Pointer cursor on hover */
+  }
+
+  .auth-button:hover {
+    background-color: #45a049; /* Darker shade on hover */
+  }
 
     .form-container form {
       display: flex; 
@@ -265,17 +353,18 @@
   </header>
 
   <main>
-    <div id="userDetails" class="user-details" style="display: none;">
+    <div id="userDetails" class="user-details" style="display:none;">
       <h2>User Details</h2>
       <p><strong>Name:</strong> <span id="userName"></span></p>
       <p><strong>Email:</strong> <span id="userEmail"></span></p>
+      <p><strong>UID:</strong> <span id="userUID"></span></p> <!-- Display UID here -->
       <p><strong>Address:</strong> <span id="userAddress"></span></p>
       <p><strong>Phone:</strong> <span id="userPhone"></span></p>
       <button class="auth-button logout-button" onclick="logout()">Logout</button>
     </div>
 
-    <div id="loginSignupForm" class="login-signup-container" style="display: flex;">
-      <div class="form-container">
+    <div id="loginSignupForm" class="login-signup-container">
+      <div class="form-container" id="loginContainer">
         <h2>Login</h2>
         <form onsubmit="login(event)">
           <label for="loginEmail">Email:</label>
@@ -283,9 +372,11 @@
           <label for="loginPassword">Password:</label>
           <input type="password" id="loginPassword" required>
           <button type="submit" class="auth-button">Login</button>
+          <a href="#" onclick="toggleForms()">Don't have an account? Sign up</a>
         </form>
       </div>
-      <div class="form-container">
+      
+      <div id="signupContainer" class="form-container" style="display:none;">
         <h2>Sign Up</h2>
         <form onsubmit="signup(event)">
           <label for="signupName">Name:</label>
@@ -299,25 +390,41 @@
           <label for="signupPassword">Password:</label>
           <input type="password" id="signupPassword" required>
           <button type="submit" class="auth-button">Sign Up</button>
+          <a href="#" onclick="toggleForms()">Already have an account? Login</a>
         </form>
       </div>
     </div>
+    
+    <script>
+    function toggleForms() {
+        const loginContainer = document.getElementById('loginContainer');
+        const signupContainer = document.getElementById('signupContainer');
+        if (loginContainer.style.display === 'none') {
+            loginContainer.style.display = 'block';
+            signupContainer.style.display = 'none';
+        } else {
+            loginContainer.style.display = 'none';
+            signupContainer.style.display = 'block';
+        }
+    }
+    </script>
+    
 
-    <div id="updateSection" class="update-section" style="display: none;">
-      <h2>Update Account</h2>
+    <div id="updateSection" class="update-section" style="display:none;">
+      <h2>Update Information</h2>
       <form onsubmit="updateEmail(event)">
-        <label for="newEmail">New Email:</label>
-        <input type="email" id="newEmail">
+        <label for="newEmail">Update Email:</label>
+        <input type="email" id="newEmail" required>
         <button type="submit" class="auth-button">Update Email</button>
       </form>
       <form onsubmit="updatePhone(event)">
-        <label for="newPhone">New Phone:</label>
-        <input type="text" id="newPhone">
+        <label for="newPhone">Update Phone:</label>
+        <input type="text" id="newPhone" required>
         <button type="submit" class="auth-button">Update Phone</button>
       </form>
       <form onsubmit="changePassword(event)">
-        <label for="newPassword">New Password:</label>
-        <input type="password" id="newPassword">
+        <label for="newPassword">Change Password:</label>
+        <input type="password" id="newPassword" required>
         <button type="submit" class="auth-button">Change Password</button>
       </form>
     </div>

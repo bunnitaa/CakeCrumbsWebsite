@@ -49,8 +49,14 @@ header {
 
 /* Main Content */
 main {
-    padding-top: 100px; /* Space for fixed header */
+    padding-top: 120px; /* Ensure this matches the total header height */
     flex: 1; /* Allow main content to grow */
+    display: flex; /* Use flexbox to center content */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    text-align: center; /* Center text */
+    flex-direction: column; /* Stack elements vertically */
+    margin: 0 auto; /* Ensure it stays within the page */
 }
 
 /* Hero Section */
@@ -59,7 +65,7 @@ main {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    margin-top: 120px; /* Increase this value if the header height is larger */
+    margin-top: 140px; /* Adjust if needed based on header height */
 }
 
 .hero h1 {
@@ -110,7 +116,7 @@ footer {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 80vh; /* Adjust height as needed */
+    min-height: 80vh; /* Use min-height for better flexibility */
     text-align: center;
 }
 
@@ -165,12 +171,14 @@ p {
 input,
 select,
 textarea {
-    width: 200px; /* Adjusted to make text boxes smaller */
-    padding: 5px; /* Reduced padding for a better fit */
+    width: 100%; /* Adjust to fill the container */
+    max-width: 400px; /* Maintain a maximum width */
+    padding: 5px; /* Reduced padding for better fit */
     border: 1px solid #ccc;
     border-radius: 5px;
     margin-bottom: 10px;
 }
+
 
 button.order-button {
     background-color: #e74c3c;
@@ -188,7 +196,7 @@ button.order-button:hover {
 /* Cake Section Styles */
 .cakes-section {
     text-align: center;
-    margin: 100px 0;
+    margin: 50px 0; /* Reduced margin to prevent excessive spacing */
 }
 
 .cakes-grid {
