@@ -6,21 +6,15 @@
   <title>Our Cakes | Cake Crumbs</title>
   <link rel="stylesheet" href="styles.css">
   
+  <script src="config.js"></script>
+
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDRH-thAW1SjOyCQlrOlUQCGBVRua8jLxU",
-      authDomain: "cakecrumbs-d1290.firebaseapp.com",
-      projectId: "cakecrumbs-d1290",
-      storageBucket: "cakecrumbs-d1290.appspot.com",
-      messagingSenderId: "543242101407",
-      appId: "1:543242101407:web:d6dd372813b0f5a4ae38aa",
-    };
     if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
+      firebase.initializeApp(FIREBASE_CONFIG);
     }
   </script>
 
@@ -56,7 +50,6 @@
     </div>
 
     <div class="cakes-menu-board">
-      
       <div class="cakes-container">
         <div class="cake-item">
           <img src="images/chocolate.jpg" alt="Chocolate Truffle Delight">
