@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You! | Cake Crumbs</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script>
+        if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+        const db = firebase.firestore();
+    </script>
+</head>
+<body class="success-page">
+    <header>
+        <nav class="navbar">
+            <div class="logo">Cake Crumbs</div>
+        </nav>
+    </header>
+
+    <main class="success-container">
+        <div class="success-card">
+            <div class="confetti-icon">🎉</div>
+            <h1>Sweet Success!</h1>
+            <p>Thank you for your order. We've received your payment and our bakers are getting started on your treats.</p>
+            
+            <div id="orderSummary" class="order-summary-box">
+                <p>Loading order details...</p>
+            </div>
+
+            <div class="success-actions">
+                <a href="account.html" class="button">View Order History</a>
+                <a href="index.html" class="button secondary">Back to Home</a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('id');
+
+        if (orderId) {
+            db.collection("orders").doc(orderId).get().then((doc) => {
+                if (doc.exists) {
+                    const order = doc.data();
+                    document.getElementById('orderSummary').innerHTML = `
+                        <h3>Order #${orderId.substring(0, 8)}</h3>
+                        <p><strong>Total Paid:</strong> ${order.total}</p>
+                        <p><strong>Status:</strong> ${order.status}</p>
+                        <p style="font-size: 0.8rem; color: #a08c90; margin-top: 10px;">
+                           A confirmation has been sent to your registered email.
+                        </p>
+                    `;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

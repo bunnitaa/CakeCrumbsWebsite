@@ -1,226 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel - Cake Crumbs</title>
+  <title>Admin Panel | Cake Crumbs</title>
   <link rel="stylesheet" href="styles.css">
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  
+  <script src="scripts.js"></script>
 </head>
-
 <body>
-  <!-- Admin Panel Content -->
-  <div id="admin-panel" style="display:none;">
-    <h1>Admin Panel - Cake Crumbs</h1>
+  <header>
+    <nav class="navbar">
+      <div class="logo">Cake Crumbs</div>
+      <div id="greeting"></div>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="cakes.html">Our Cakes</a></li>
+        <li><a href="account.html">Account</a></li>
+        <li><a href="cart.html">Cart</a></li>
+      </ul>
+    </nav>
+  </header>
 
-    <!-- Cake Management -->
-    <section id="cake-management">
-      <h2>Manage Cakes</h2>
-      <button id="add-cake-btn">Add Cake</button>
-      <button id="edit-cake-btn">Edit Cake</button>
-      <button id="delete-cake-btn">Delete Cake</button>
-    </section>
+  <main id="adminContent" style="display:none; align-items: center; width: 100%;">
+    
+    <div class="cakes-page-header">
+      <h1>Manage Orders</h1>
+      <div class="search-filter">
+        <input type="text" id="adminSearch" placeholder="Search name or ID..." onkeyup="filterOrders()" style="max-width: 250px;">
+      </div>
+    </div>
 
-    <!-- User Management -->
-    <section id="user-management">
-      <h2>User Information</h2>
-      <table id="user-table">
-        <thead>
-          <tr>
-            <th>User ID</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
-
-    <!-- Order Management -->
-    <section id="order-management">
-      <h2>Manage Orders</h2>
-      <table id="order-table">
+    <div class="admin-grid">
+      <table class="cute-table">
         <thead>
           <tr>
             <th>Order ID</th>
-            <th>Cakes Ordered</th>
+            <th>Customer</th>
+            <th>Items</th>
+            <th>Total Paid</th>
             <th>Status</th>
-            <th>Actions</th>
+            <th>Action</th>
           </tr>
         </thead>
-        <tbody></tbody>
+        <tbody id="adminOrdersTable">
+          </tbody>
       </table>
-    </section>
+    </div>
+  </main>
+
+  <div id="accessDenied" style="display:none; text-align:center; margin-top:150px; width: 100%;">
+    <h1>Access Denied</h1>
+    <p style="color: #8c7a7d; margin-bottom: 20px;">You do not have permission to view this page.</p>
+    <a href="index.html" style="color: #ff8fab; font-weight: bold; text-decoration: none;">Return Home</a>
   </div>
 
-  <!-- Firebase Initialization -->
   <script>
-    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyDRH-thAW1SjOyCQlrOlUQCGBVRua8jLxU",
       authDomain: "cakecrumbs-d1290.firebaseapp.com",
       projectId: "cakecrumbs-d1290",
-      storageBucket: "cakecrumbs-d1290.firebasestorage.app",
+      storageBucket: "cakecrumbs-d1290.appspot.com",
       messagingSenderId: "543242101407",
       appId: "1:543242101407:web:d6dd372813b0f5a4ae38aa",
-      measurementId: "G-755838ERP4"
     };
-
-    // Initialize Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
     const db = firebase.firestore();
 
-    // Check if the user is an admin
-    firebase.auth().onAuthStateChanged(user => {
+    firebase.auth().onAuthStateChanged((user) => {
       if (user) {
-        // Check if the user has the 'admin' role in Firestore
-        db.collection("users").doc(user.uid).get()
-          .then(doc => {
-            if (doc.exists && doc.data().role === "admin") {
-              // Show admin panel content
-              document.getElementById("admin-panel").style.display = "block";
-              loadUsers(); // Load user data
-              loadOrders(); // Load order data
-            } else {
-              // Not an admin, redirect to account page
-              window.location.href = 'account.html';
-            }
-          })
-          .catch((error) => {
-            console.error("Error getting user role:", error);
-          });
+        db.collection('users').doc(user.uid).get().then((doc) => {
+          if (doc.exists && doc.data().role === 'admin') {
+            document.getElementById('adminContent').style.display = 'flex';
+            document.getElementById('adminContent').style.flexDirection = 'column';
+            loadAllOrders();
+          } else {
+            document.getElementById('accessDenied').style.display = 'block';
+          }
+        });
       } else {
-        // No user is logged in, redirect to login page
         window.location.href = 'account.html';
       }
     });
 
-    // Load all users into the admin panel
-    function loadUsers() {
-      const userTable = document.getElementById("user-table").getElementsByTagName('tbody')[0];
-      db.collection("users").get().then(snapshot => {
-        snapshot.forEach(doc => {
-          const row = userTable.insertRow();
-          const user = doc.data();
-          row.insertCell(0).textContent = doc.id;
-          row.insertCell(1).textContent = user.email;
-          row.insertCell(2).textContent = user.role;
-          const actionsCell = row.insertCell(3);
-          const promoteBtn = document.createElement("button");
-          promoteBtn.textContent = "Promote to Admin";
-          promoteBtn.onclick = () => promoteToAdmin(doc.id);
-          actionsCell.appendChild(promoteBtn);
-        });
-      });
-    }
-
-    // Promote user to admin
-    function promoteToAdmin(userId) {
-      db.collection("users").doc(userId).update({
-        role: "admin"
-      })
-        .then(() => {
-          alert("User promoted to admin");
-          window.location.reload();
-        })
-        .catch((error) => {
-          console.error("Error promoting user:", error);
-        });
-    }
-
-    // Load all orders into the admin panel
-    function loadOrders() {
-      const orderTable = document.getElementById("order-table").getElementsByTagName('tbody')[0];
-      db.collection("orders").get().then(snapshot => {
-        snapshot.forEach(doc => {
+    function loadAllOrders() {
+      const tableBody = document.getElementById('adminOrdersTable');
+      
+      db.collection('orders').orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
+        tableBody.innerHTML = '';
+        
+        snapshot.forEach((doc) => {
           const order = doc.data();
-          const row = orderTable.insertRow();
-          row.insertCell(0).textContent = doc.id;
-          row.insertCell(1).textContent = order.cakes.join(", ");
-          row.insertCell(2).textContent = order.status;
-          const actionsCell = row.insertCell(3);
-          const updateStatusBtn = document.createElement("button");
-          updateStatusBtn.textContent = order.status === "in progress" ? "Mark as Done" : "Mark as In Progress";
-          updateStatusBtn.onclick = () => updateOrderStatus(doc.id, order.status);
-          actionsCell.appendChild(updateStatusBtn);
+          const id = doc.id;        
+          const row = document.createElement('tr');          
+          const cssStatus = (order.status || 'pending').replace(/\s+/g, '').toLowerCase();
+
+          row.innerHTML = `
+            <td><strong>#${id.substring(0,6)}</strong></td>
+            <td id="customer-${id}">Loading...</td>
+            <td>${order.items ? order.items.length : 0} items</td>
+            <td style="font-weight: bold; color: #ff8fab;">${order.total || '$0.00'}</td>
+            <td><span class="status-badge status-${cssStatus}">${order.status || 'Pending'}</span></td>
+            <td>
+              <select onchange="updateStatus('${id}', this.value)">
+                <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                <option value="Baking" ${order.status === 'Baking' ? 'selected' : ''}>Baking</option>
+                <option value="Completed" ${order.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                <option value="Picked Up" ${order.status === 'Picked Up' ? 'selected' : ''}>Picked Up</option>
+              </select>
+            </td>
+          `;
+          tableBody.appendChild(row);
+
+          db.collection('users').doc(order.userId).get().then((userDoc) => {
+             const name = userDoc.exists ? userDoc.data().name : "Unknown Customer";
+             document.getElementById(`customer-${id}`).innerHTML = `
+                <strong>${name}</strong> <br>
+                <button 
+                  onclick="copyToClipboard('${order.userId}', this)" 
+                  style="margin-top: 5px; background: #ffe5ec; color: #5c4a4d; border: none; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; cursor: pointer; box-shadow: none; transition: background 0.3s;">
+                  Copy ID
+                </button>
+             `;
+          });
         });
       });
     }
 
-    // Update order status (Done / In Progress)
-    function updateOrderStatus(orderId, currentStatus) {
-      const newStatus = currentStatus === "in progress" ? "done" : "in progress";
-      db.collection("orders").doc(orderId).update({
-        status: newStatus
-      })
-        .then(() => {
-          alert("Order status updated");
-          window.location.reload();
-        })
-        .catch((error) => {
-          console.error("Error updating order status:", error);
+    function updateStatus(orderId, newStatus) {
+      db.collection('orders').doc(orderId).update({ status: newStatus })
+        .then(() => console.log("Status updated to " + newStatus))
+        .catch(err => alert("Failed to update status: " + err.message));
+    }
+
+    function copyToClipboard(text, btnElement) {
+        navigator.clipboard.writeText(text).then(() => {
+            btnElement.innerText = "Copied!";
+            btnElement.style.background = "#d4edda";
+            btnElement.style.color = "#155724";
+            
+            setTimeout(() => {
+                btnElement.innerText = "Copy ID";
+                btnElement.style.background = "#ffe5ec";
+                btnElement.style.color = "#5c4a4d";
+            }, 2000);
+        }).catch(err => {
+            console.error("Copy failed: ", err);
+            alert("Your browser blocked the copy action.");
         });
     }
 
-    // Add new cake (example)
-    document.getElementById("add-cake-btn").addEventListener("click", () => {
-      const cakeName = prompt("Enter cake name");
-      const cakeDescription = prompt("Enter cake description");
-      const cakePrice = parseFloat(prompt("Enter cake price"));
+    function filterOrders() {
+        const searchInput = document.getElementById('adminSearch').value.toLowerCase();
+        const table = document.getElementById('adminOrdersTable');
+        const rows = table.getElementsByTagName('tr');
 
-      db.collection("cakes").add({
-        name: cakeName,
-        description: cakeDescription,
-        price: cakePrice
-      })
-        .then(() => {
-          alert("Cake added successfully!");
-          window.location.reload();
-        })
-        .catch((error) => {
-          console.error("Error adding cake:", error);
-        });
-    });
-
-    // Edit cake (example)
-    document.getElementById("edit-cake-btn").addEventListener("click", () => {
-      const cakeId = prompt("Enter cake ID to edit");
-      const newName = prompt("Enter new cake name");
-      const newDescription = prompt("Enter new cake description");
-
-      db.collection("cakes").doc(cakeId).update({
-        name: newName,
-        description: newDescription
-      })
-        .then(() => {
-          alert("Cake updated successfully!");
-          window.location.reload();
-        })
-        .catch((error) => {
-          console.error("Error editing cake:", error);
-        });
-    });
-
-    // Delete cake (example)
-    document.getElementById("delete-cake-btn").addEventListener("click", () => {
-      const cakeId = prompt("Enter cake ID to delete");
-
-      db.collection("cakes").doc(cakeId).delete()
-        .then(() => {
-          alert("Cake deleted successfully!");
-          window.location.reload();
-        })
-        .catch((error) => {
-          console.error("Error deleting cake:", error);
-        });
-    });
+        for (let i = 0; i < rows.length; i++) {
+            const rowText = rows[i].textContent.toLowerCase();
+            
+            if (rowText.includes(searchInput)) {
+                rows[i].style.display = '';
+            } else {
+                rows[i].style.display = 'none'; 
+            }
+        }
+    }
   </script>
 </body>
-
 </html>

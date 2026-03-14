@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cake Crumbs | Home</title>
   <link rel="stylesheet" href="styles.css">
+  
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  
   <script>
-    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyDRH-thAW1SjOyCQlrOlUQCGBVRua8jLxU",
       authDomain: "cakecrumbs-d1290.firebaseapp.com",
@@ -18,98 +19,19 @@
       messagingSenderId: "543242101407",
       appId: "1:543242101407:web:d6dd372813b0f5a4ae38aa",
     };
-
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-
-    // Check if user is logged in
-    firebase.auth().onAuthStateChanged((user) => {
-      const greetingElement = document.getElementById('greeting');
-      if (user) {
-        greetingElement.innerHTML = `Hello, ${user.displayName || user.email}`; // Display username or email
-      }
-    });
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
   </script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f9f9f9;
-    }
 
-    header {
-      background-color: #fff;
-      padding: 10px 20px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-
-    .navbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .nav-links {
-      list-style-type: none;
-      display: flex;
-      gap: 15px;
-    }
-
-    .nav-links a {
-      text-decoration: none;
-      color: #333;
-    }
-
-    .hero {
-      text-align: center;
-      padding: 50px;
-    }
-
-    .hero-image {
-      width: 300px; /* Adjust image size as needed */
-    }
-
-    .button-container {
-      margin-top: 20px;
-    }
-
-    .button {
-      background-color: #e67e22;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      text-decoration: none;
-      margin: 5px;
-    }
-
-    .button:hover {
-      background-color: #d35400;
-    }
-
-    .message {
-      margin-top: 20px;
-      font-size: 1em;
-      color: #555;
-    }
-
-    footer {
-      background-color: #f1f1f1;
-      text-align: center;
-      padding: 15px 0;
-      position: relative;
-      bottom: 0;
-      width: 100%;
-    }
-  </style>
+  <script src="scripts.js"></script>
 </head>
 <body>
+  
   <header>
     <nav class="navbar">
       <div class="logo">Cake Crumbs</div>
-      <div id="greeting"></div> <!-- This will hold the greeting -->
+      <div id="greeting"></div>
       <ul class="nav-links">
         <li><a href="index.html">Home</a></li>
         <li><a href="cakes.html">Our Cakes</a></li>
@@ -119,22 +41,77 @@
     </nav>
   </header>
 
-  <section class="hero">
-    <h1>Welcome to Cake Crumbs!</h1>
-    <p>Discover the finest bento cakes and more, crafted with love.</p>
-    <img src="images/cakes.jpg" alt="Delicious Bento Cake" class="hero-image">
-    
-    <div class="message">Create an Account to Order.</div> <!-- Added message -->
+  <main>
+    <section class="hero-split">
+      <div class="hero-content">
+        <h1>Welcome to Cake Crumbs!</h1>
+        <p>Discover the finest bento cakes, crafted with love and baked fresh daily. Perfect for birthdays, anniversaries, or just treating yourself.</p>
+        <div class="button-container">
+          <a href="cakes.html" class="button" style="background-color: #ff8fab; color: white;">Order Now</a>
+          <a href="account.html" class="button">Sign Up / Login</a>
+        </div>
+      </div>
+      <div class="hero-image-wrapper">
+        <img src="images/cakes.jpg" alt="Delicious Bento Cake" class="hero-image">
+      </div>
+    </section>
 
-    <div class="button-container">
-      <a href="cart.html" class="button">Order Now</a>
-      <a href="cakes.html" class="button">Browse Our Cakes</a>
-      <a href="account.html" class="button">Sign Up / Login</a>
-    </div>
-  </section>
+    <section class="perks-section">
+      <div class="perk-card">
+        <h3>Baked Fresh</h3>
+        <p>Every cake is made from scratch the morning of your pickup.</p>
+      </div>
+      <div class="perk-card">
+        <h3>Hand-Crafted</h3>
+        <p>Beautiful, trendy bento designs customized just for you.</p>
+      </div>
+      <div class="perk-card">
+        <h3>Local Love</h3>
+        <p>Proudly serving the Montreal area with premium ingredients.</p>
+      </div>
+    </section>
+
+    <section class="featured-section">
+      <h2 style="font-size: 2.5rem; text-align: center; margin-bottom: 30px;">Our Top Sellers</h2>
+      
+      <div class="cakes-container" style="max-width: 1000px; padding: 0;">
+        
+        <div class="cake-item">
+          <img src="images/chocolate.jpg" alt="Chocolate Truffle Delight">
+          <h2>Chocolate Truffle</h2>
+          <p>Rich and decadent dark chocolate fudge sponge.</p>
+          <p><strong>$29.99</strong></p>
+          <a href="cakes.html"><button>View Details</button></a>
+        </div>
+
+        <div class="cake-item">
+          <img src="images/strawberry.jpg" alt="Strawberry Cloud Dream">
+          <h2>Strawberry Cloud</h2>
+          <p>Light and fluffy sponge infused with real berries.</p>
+          <p><strong>$29.99</strong></p>
+          <a href="cakes.html"><button>View Details</button></a>
+        </div>
+
+        <div class="cake-item">
+          <img src="images/vanilla.jpg" alt="Vanilla Bean Classic">
+          <h2>Vanilla Bean</h2>
+          <p>Pure, timeless vanilla flavor with Swiss buttercream.</p>
+          <p><strong>$29.99</strong></p>
+          <a href="cakes.html"><button>View Details</button></a>
+        </div>
+
+      </div>
+      
+      <div style="text-align: center; margin-top: 40px;">
+        <a href="cakes.html" class="button" style="padding: 15px 40px; font-size: 1.2rem;">See Full Menu</a>
+      </div>
+    </section>
+
+  </main>
 
   <footer>
     <p>&copy; 2024 Cake Crumbs | All Rights Reserved</p>
   </footer>
+
 </body>
 </html>

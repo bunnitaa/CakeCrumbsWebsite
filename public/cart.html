@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,12 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cart | Cake Crumbs</title>
   <link rel="stylesheet" href="styles.css">
+  <script src="config.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  <script src="https://js.stripe.com/v3/"></script>
+  
+  <script>
+    if (!firebase.apps.length) {
+      firebase.initializeApp(FIREBASE_CONFIG);
+    }
+  </script>
+  <script src="scripts.js"></script>
+
+  <script src="https://www.paypal.com/sdk/js?client-id=AQ5r7CzW3ls1kJDYqy8P6CfKuFsepLrn6cYkyhJQmdZwcfFz6DOzBgleJ_ka5L6F33rUeHIdSy3HyoQR&currency=CAD"></script>
 </head>
 <body>
+  
   <header>
     <nav class="navbar">
       <div class="logo">Cake Crumbs</div>
@@ -26,23 +35,34 @@
   </header>
 
   <main>
-    <h1>Your Cart</h1>
-    <div id="cartItems" class="cart-items">
-      <p>Loading cart items...</p>
-    </div>
-    <h2 id="totalPrice">Total: $0</h2>
+    <div class="cart-wrapper">
+      <div id="cartItemsContainer" class="cart-items-list">
+        <p>Loading your delicious cakes...</p>
+      </div>
 
-    <!-- Optional Message and Pickup Date -->
-    <div class="order-details">
-      <label for="message">Message on Cake (optional):</label>
-      <input type="text" id="message" placeholder="Enter a special message">
-      
-      <label for="pickupDate">Pickup Date:</label>
-      <input type="date" id="pickupDate">
+      <div class="cart-summary-card">
+        <h3>Order Summary</h3>
+        <hr>
+        <div class="summary-row">
+          <span>Subtotal (<span id="totalItems">0</span> items):</span>
+          <span id="cartSubtotal">$0.00</span>
+        </div>
+        <div class="summary-row">
+          <span>GST (5%):</span>
+          <span id="gstTotal">$0.00</span>
+        </div>
+        <div class="summary-row">
+          <span>QST (9.975%):</span>
+          <span id="qstTotal">$0.00</span>
+        </div>
+        <div class="summary-row total-price">
+          <span>Grand Total:</span>
+          <span id="cartTotal">$0.00</span>
+        </div>
+        
+        <div id="paypal-button-container" style="margin-top: 20px;"></div>
+      </div>
     </div>
-
-    <!-- Place Order Button -->
-    <button id="placeOrderBtn">Place Order</button>
   </main>
 
   <footer>
@@ -50,215 +70,134 @@
   </footer>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDRH-thAW1SjOyCQlrOlUQCGBVRua8jLxU",
-      authDomain: "cakecrumbs-d1290.firebaseapp.com",
-      projectId: "cakecrumbs-d1290",
-      storageBucket: "cakecrumbs-d1290.appspot.com",
-      messagingSenderId: "543242101407",
-      appId: "1:543242101407:web:d6dd372813b0f5a4ae38aa",
-    };
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    let currentCartTotal = "0.00";
 
-    firebase.initializeApp(firebaseConfig);
-
-    firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        document.getElementById('greeting').textContent = `Hello, ${user.displayName || user.email}`;
-        loadCartItems(user.uid);
-      } else {
+    auth.onAuthStateChanged((user) => {
+      if (!user) {
         window.location.href = 'account.html';
+      } else {
+        loadCartItems(user.uid);
+        renderPayPalButtons(user);
       }
     });
-
-    const db = firebase.firestore();
-    const stripe = Stripe('pk_live_51QFjitEzu3GQRfJfs8OQxnanWrTPPuSa6nHL5qX0ZTs2vK8qAbbPX5Ir4M2gjJlddFrKbD5j6fEKr46Og5h8NxqB00NcJwZVw5');
 
     function loadCartItems(userId) {
-      const cartItemsContainer = document.getElementById('cartItems');
-      cartItemsContainer.innerHTML = '';
-      let total = 0;
+      const container = document.getElementById('cartItemsContainer');
+      const subtotalDisplay = document.getElementById('cartSubtotal');
+      const gstDisplay = document.getElementById('gstTotal');
+      const qstDisplay = document.getElementById('qstTotal');
+      const totalDisplay = document.getElementById('cartTotal');
+      const countDisplay = document.getElementById('totalItems');
 
-      db.collection("carts").doc(userId).get().then((doc) => {
-        if (doc.exists) {
-          const data = doc.data();
-          
-          data.cakes.forEach((item) => {
-            total += item.price;
+      db.collection("carts").doc(userId).onSnapshot((doc) => {
+        container.innerHTML = '';
+        let subtotal = 0;
+
+        if (doc.exists && doc.data().cakes && doc.data().cakes.length > 0) {
+          const cakes = doc.data().cakes;
+
+          cakes.forEach((item, index) => {
+            const price = parseFloat(item.price) || 0;
+            subtotal += price;
 
             const itemElement = document.createElement('div');
-            itemElement.classList.add('cart-item');
+            itemElement.className = 'cart-item-card';
+            
             itemElement.innerHTML = `
-              <h3>${item.name}</h3>
-              <p><strong>Description:</strong> ${item.description}</p>
-              <p><strong>Ingredients:</strong> ${item.ingredients}</p>
-              <p><strong>Price:</strong> $${item.price.toFixed(2)}</p>
-              <button class="remove-btn" data-name="${item.name}">Remove</button>
+              <img src="${item.image || ''}" alt="${item.name}" class="cart-item-image">
+              <div class="cart-item-details">
+                <h4>${item.name}</h4>
+                <p class="cart-item-price">$${price.toFixed(2)}</p>
+              </div>
+              <button class="remove-btn" onclick="removeItem(${index})">Remove</button>
             `;
-            cartItemsContainer.appendChild(itemElement);
+            container.appendChild(itemElement);
           });
 
-          document.getElementById('totalPrice').textContent = `Total: $${total.toFixed(2)}`;
+          const gst = subtotal * 0.05;
+          const qst = subtotal * 0.09975;
+          const grandTotal = subtotal + gst + qst;
+
+          currentCartTotal = grandTotal.toFixed(2);
+
+          subtotalDisplay.innerText = `$${subtotal.toFixed(2)}`;
+          gstDisplay.innerText = `$${gst.toFixed(2)}`;
+          qstDisplay.innerText = `$${qst.toFixed(2)}`;
+          totalDisplay.innerText = `$${grandTotal.toFixed(2)}`;
+          countDisplay.innerText = cakes.length;
+
         } else {
-          cartItemsContainer.innerHTML = '<p>Your cart is empty.</p>';
+          container.innerHTML = '<p>Your cart is empty!</p>';
+          subtotalDisplay.innerText = '$0.00';
+          gstDisplay.innerText = '$0.00';
+          qstDisplay.innerText = '$0.00';
+          totalDisplay.innerText = '$0.00';
+          countDisplay.innerText = '0';
+          currentCartTotal = "0.00";
         }
-      }).catch((error) => {
-        console.error("Error loading cart items: ", error);
-        cartItemsContainer.innerHTML = '<p>Error loading cart items. Please try again.</p>';
       });
     }
 
-    document.getElementById("placeOrderBtn").addEventListener("click", placeOrder);
-
-    function placeOrder() {
-      const user = firebase.auth().currentUser;
-
-      if (!user) {
-        alert("You must be logged in to place an order.");
-        return;
-      }
-
-      const message = document.getElementById("message").value;
-      const pickupDate = document.getElementById("pickupDate").value;
-      const orderTime = new Date().toLocaleString();
-
-      db.collection("carts").doc(user.uid).get()
-        .then((doc) => {
-          if (!doc.exists || doc.data().cakes.length === 0) {
-            alert("Your cart is empty. Please add items to your cart before placing an order.");
+    function renderPayPalButtons(user) {
+      document.getElementById('paypal-button-container').innerHTML = '';
+      
+      paypal.Buttons({
+        createOrder: function(data, actions) {
+          if (parseFloat(currentCartTotal) <= 0) {
+            alert("Please add items to your cart first.");
             return;
           }
-
-          const data = doc.data();
-          const total = data.cakes.reduce((sum, item) => sum + item.price, 0);
-          
-          const orderData = {
-            cakes: JSON.stringify(data.cakes),
-            createdAt: new Date().toISOString(),
-            message: message || "",
-            orderTime: orderTime,
-            dateOfPickup: pickupDate,
-            userID: user.uid,
-            total: total.toFixed(2) // Store the total price as 'total'
-          };
-
-          db.collection("orders").add(orderData)
-            .then((docRef) => {
-              console.log("Order placed with ID: ", docRef.id);
-              alert("Your order has been placed!");
-              clearCart(user.uid);
-            })
-            .catch((error) => {
-              console.error("Error placing order: ", error);
-            });
-
-          createCheckoutSession(data.cakes);
-        })
-        .catch((error) => {
-          console.error("Error fetching cart items: ", error);
-        });
-    }
-
-    function createCheckoutSession(cakes) {
-      fetch('/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
+          return actions.order.create({
+            purchase_units: [{
+              amount: {
+                value: currentCartTotal
+              }
+            }]
+          });
         },
-        body: JSON.stringify({ cakes: cakes })
-      })
-      .then((response) => response.json())
-      .then((sessionId) => stripe.redirectToCheckout({ sessionId }))
-      .then((result) => {
-        if (result.error) {
-          alert(result.error.message);
+        onApprove: function(data, actions) {
+          return actions.order.capture().then(function(details) {
+            const cartRef = db.collection('carts').doc(user.uid);
+            
+            return cartRef.get().then((doc) => {
+              const items = doc.data().cakes;
+              
+              return db.collection("orders").add({
+                userId: user.uid,
+                items: items,
+                total: "$" + currentCartTotal,
+                status: "Paid - Preparing",
+                paypalOrderId: data.orderID,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+              });
+            }).then((orderDoc) => {
+              return cartRef.update({ cakes: [] }).then(() => orderDoc);
+            }).then((orderDoc) => {
+              window.location.href = `success.html?id=${orderDoc.id}`;
+            });
+          });
+        },
+        onError: function(err) {
+          console.error("PayPal Error: ", err);
+          alert("Payment could not be processed. Please try again.");
         }
-      })
-      .catch((error) => {
-        console.error("Error creating checkout session: ", error);
-      });
+      }).render('#paypal-button-container');
     }
 
-    function clearCart(userId) {
-      db.collection("carts").doc(userId).delete().then(() => {
-        console.log("Cart cleared");
-        document.getElementById('cartItems').innerHTML = '<p>Your cart is empty.</p>';
-        document.getElementById('totalPrice').textContent = 'Total: $0';
-      }).catch((error) => {
-        console.error("Error clearing cart: ", error);
-      });
-    }
+    function removeItem(index) {
+      const user = auth.currentUser;
+      const cartRef = db.collection('carts').doc(user.uid);
 
-    document.addEventListener('click', (e) => {
-      if (e.target.classList.contains('remove-btn')) {
-        const cakeName = e.target.dataset.name;
-        removeCakeFromCart(cakeName);
-      }
-    });
-
-    function removeCakeFromCart(cakeName) {
-      const user = firebase.auth().currentUser;
-
-      if (!user) {
-        alert("You must be logged in to remove an item.");
-        return;
-      }
-
-      db.collection("carts").doc(user.uid).get()
-        .then((doc) => {
-          if (doc.exists) {
-            const data = doc.data();
-            const updatedCakes = data.cakes.filter(item => item.name !== cakeName);
-            return db.collection("carts").doc(user.uid).update({ cakes: updatedCakes });
-          } else {
-            alert("Your cart is empty.");
-          }
-        })
-        .then(() => {
-          loadCartItems(user.uid);
-        })
-        .catch((error) => {
-          console.error("Error removing cake from cart: ", error);
+      cartRef.get().then((doc) => {
+        const cakes = doc.data().cakes;
+        const itemToRemove = cakes[index];
+        return cartRef.update({
+          cakes: firebase.firestore.FieldValue.arrayRemove(itemToRemove)
         });
+      }).catch(err => console.error("Error removing item:", err));
     }
   </script>
-
-  <style>
-    .cart-items {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .cart-item {
-      border: 1px solid #ccc;
-      padding: 15px;
-      border-radius: 8px;
-      background-color: #f9f9f9;
-    }
-
-    .order-details {
-      max-width: 600px;
-      margin: 20px auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    #placeOrderBtn {
-      display: block;
-      width: 100%;
-      max-width: 600px;
-      margin: 20px auto;
-      padding: 10px;
-      background-color: #4CAF50;
-      color: white;
-      font-size: 18px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-  </style>
 </body>
 </html>

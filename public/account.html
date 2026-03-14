@@ -5,68 +5,155 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Account | Cake Crumbs</title>
   <link rel="stylesheet" href="styles.css">
+  <script src="config.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="scripts.js"></script>
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDRH-thAW1SjOyCQlrOlUQCGBVRua8jLxU",
-      authDomain: "cakecrumbs-d1290.firebaseapp.com",
-      projectId: "cakecrumbs-d1290",
-      storageBucket: "cakecrumbs-d1290.appspot.com",
-      messagingSenderId: "543242101407",
-      appId: "1:543242101407:web:d6dd372813b0f5a4ae38aa",
-    };
-
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) {
+      firebase.initializeApp(FIREBASE_CONFIG);
+    }
     const auth = firebase.auth();
     const db = firebase.firestore();
+
+    const validate = {
+      name: (val) => val.trim().includes(' ') && val.trim().length > 4,
+      phone: (val) => /^\d{10}$/.test(val.replace(/\D/g, '')),
+      address: (val) => /^\d+\s.{5,}/.test(val.trim()),
+      password: (val) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(val)
+    };
 
     function checkUser() {
       auth.onAuthStateChanged((user) => {
         if (user) {
-          document.getElementById('userDetails').style.display = 'block';
-          document.getElementById('userName').innerText = user.displayName || user.email;
+          document.getElementById('profileView').style.display = 'flex';
+          document.getElementById('loginSignupView').style.display = 'none';
           document.getElementById('userEmail').innerText = user.email;
-          document.getElementById('userUID').innerText = user.uid;
-          document.getElementById('greeting').innerText = `Hello, ${user.displayName || user.email}`;
-          document.getElementById('loginSignupForm').style.display = 'none';
-          document.getElementById('updateSection').style.display = 'block';
 
-          db.collection('users').doc(user.uid).get().then((doc) => {
+          db.collection('users').doc(user.uid).onSnapshot((doc) => {
             if (doc.exists) {
               const userData = doc.data();
-              document.getElementById('userAddress').innerText = userData.address;
-              document.getElementById('userPhone').innerText = userData.phone;
+              const name = userData.name || user.displayName || user.email;
+              const address = userData.address || '';
+              const phone = userData.phone || '';
+
+              document.getElementById('userName').innerText = name;
+              document.getElementById('userAddress').innerText = address ? address : 'No Address Set';
+              document.getElementById('userPhone').innerText = phone ? phone : 'No Phone Set';
+              document.getElementById('editName').value = userData.name || user.displayName || '';
+              document.getElementById('editAddress').value = address;
+              document.getElementById('editPhone').value = phone;
             }
           });
+          loadUserOrders(user.uid);
         } else {
-          // If not logged in, redirect to login
-          window.location.href = 'account.html';
+          document.getElementById('profileView').style.display = 'none';
+          document.getElementById('loginSignupView').style.display = 'flex';
         }
       });
     }
 
-    function logout() {
-      auth.signOut().then(() => {
-        alert('Logged out successfully!');
-        window.location.href = 'account.html';
-      }).catch((error) => {
-        alert(`Error: ${error.message}`);
+    function initAutocomplete() {
+      const signupAddr = document.getElementById('signupAddress');
+      const editAddr = document.getElementById('editAddress');
+
+      if (signupAddr) {
+        new google.maps.places.Autocomplete(signupAddr, {
+          types: ['address'],
+          componentRestrictions: { country: 'CA' }
+        });
+      }
+
+      if (editAddr) {
+        new google.maps.places.Autocomplete(editAddr, {
+          types: ['address'],
+          componentRestrictions: { country: 'CA' }
+        });
+      }
+    }
+
+    window.onload = () => {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.onload = () => {
+        checkUser();
+        initAutocomplete();
+      };
+      document.head.appendChild(script);
+    };
+
+    function toggleEditProfile() {
+      const displayDiv = document.getElementById('displayProfile');
+      const editForm = document.getElementById('editProfileForm');
+      const editBtn = document.getElementById('editProfileBtn');
+
+      if (editForm.style.display === 'none') {
+        displayDiv.style.display = 'none';
+        editForm.style.display = 'flex';
+        editBtn.style.display = 'none';
+      } else {
+        displayDiv.style.display = 'block';
+        editForm.style.display = 'none';
+        editBtn.style.display = 'block';
+      }
+    }
+
+    function saveProfile(event) {
+      event.preventDefault();
+      const user = auth.currentUser;
+      const newName = document.getElementById('editName').value;
+      const newAddress = document.getElementById('editAddress').value;
+      const newPhone = document.getElementById('editPhone').value;
+
+      if (!validate.name(newName)) return alert("Please enter both First and Last name.");
+      if (!validate.phone(newPhone)) return alert("Please enter a valid 10-digit phone number.");
+      if (!validate.address(newAddress)) return alert("Please enter a valid delivery address.");
+
+      db.collection('users').doc(user.uid).update({
+        name: newName,
+        address: newAddress,
+        phone: newPhone
+      }).then(() => {
+        return user.updateProfile({ displayName: newName });
+      }).then(() => {
+        toggleEditProfile();
+      }).catch(err => alert("Error: " + err.message));
+    }
+
+    function loadUserOrders(userId) {
+      const ordersContainer = document.getElementById('ordersContainer');
+      db.collection('orders').where('userId', '==', userId).orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
+        ordersContainer.innerHTML = '';
+        if (snapshot.empty) {
+          ordersContainer.innerHTML = '<p style="text-align:center; color:#8c7a7d;">No orders yet! 🍰</p>';
+          return;
+        }
+        snapshot.forEach((doc) => {
+          const order = doc.data();
+          const cssStatus = (order.status || 'pending').replace(/\s+/g, '').toLowerCase();
+          ordersContainer.innerHTML += `
+            <div class="order-card">
+              <div class="order-header">
+                <strong>Order #${doc.id.substring(0, 8)}</strong>
+                <span class="status-badge status-${cssStatus}">${order.status || 'Pending'}</span>
+              </div>
+              <p>Placed on: ${order.timestamp ? order.timestamp.toDate().toLocaleDateString() : 'Processing'}</p>
+              <div class="order-footer"><strong>Total Paid: ${order.total}</strong></div>
+            </div>`;
+        });
       });
+    }
+
+    function toggleForms(formType) {
+      document.getElementById('loginFormElement').style.display = (formType === 'signup') ? 'none' : 'flex';
+      document.getElementById('signupFormElement').style.display = (formType === 'signup') ? 'flex' : 'none';
     }
 
     function login(event) {
       event.preventDefault();
-      const email = document.getElementById('loginEmail').value;
-      const password = document.getElementById('loginPassword').value;
-
-      auth.signInWithEmailAndPassword(email, password).then(() => {
-        alert('Logged in successfully!');
-        window.location.href = 'cakes.html';
-      }).catch((error) => {
-        alert(`Error: ${error.message}`);
-      });
+      auth.signInWithEmailAndPassword(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value)
+        .catch(err => alert(err.message));
     }
 
     function signup(event) {
@@ -76,81 +163,56 @@
       const address = document.getElementById('signupAddress').value;
       const phone = document.getElementById('signupPhone').value;
       const password = document.getElementById('signupPassword').value;
+      const terms = document.getElementById('termsAgree').checked;
 
-      auth.createUserWithEmailAndPassword(email, password).then((userCredential) => {
-        const user = userCredential.user;
-        return user.updateProfile({
-          displayName: name
+      if (!terms) return alert("You must agree to the Terms & Conditions and verify your address.");
+      if (!validate.name(name)) return alert("Please enter First and Last name.");
+      if (!validate.phone(phone)) return alert("Please enter a valid 10-digit phone number.");
+      if (!validate.address(address)) return alert("Please enter a valid street address starting with a number.");
+      if (!validate.password(password)) return alert("Password must be 8+ chars with at least one uppercase letter and one number.");
+
+      auth.createUserWithEmailAndPassword(email, password).then((cred) => {
+        return db.collection('users').doc(cred.user.uid).set({
+          name: name, email: email, address: address, phone: phone, role: "user"
         });
-      }).then(() => {
-        const uid = auth.currentUser.uid;
-        return db.collection('users').doc(uid).set({
-          name: name,
-          email: email,
-          address: address,
-          phone: phone
-        });
-      }).then(() => {
-        alert('Signup successful!');
-        window.location.href = 'cakes.html';
-      }).catch((error) => {
-        alert(`Error: ${error.message}`);
-      });
+      }).catch(err => alert(err.message));
+    }
+
+    function forgotPassword() {
+      const email = document.getElementById('loginEmail').value;
+      if (!email) {
+        alert("Please enter your email address first!");
+        return;
+      }
+      auth.sendPasswordResetEmail(email)
+        .then(() => alert("Password reset email sent! Please check your inbox."))
+        .catch(err => alert(err.message));
     }
 
     function updateEmail(event) {
       event.preventDefault();
       const newEmail = document.getElementById('newEmail').value;
-      const user = auth.currentUser;
-      user.updateEmail(newEmail).then(() => {
-        alert('Email updated successfully!');
+      auth.currentUser.updateEmail(newEmail).then(() => {
+        alert('Email updated!');
         document.getElementById('newEmail').value = '';
-        document.getElementById('userEmail').innerText = newEmail;
-      }).catch((error) => {
-        alert(`Error: ${error.message}`);
-      });
-    }
-
-    function updatePhone(event) {
-      event.preventDefault();
-      const newPhone = document.getElementById('newPhone').value;
-      const user = auth.currentUser;
-      return db.collection('users').doc(user.uid).update({
-        phone: newPhone
-      }).then(() => {
-        alert(`Phone number updated to: ${newPhone}`);
-        document.getElementById('newPhone').value = '';
-        document.getElementById('userPhone').innerText = newPhone;
-      }).catch((error) => {
-        alert(`Error: ${error.message}`);
-      });
+      }).catch(err => alert(err.message));
     }
 
     function changePassword(event) {
       event.preventDefault();
       const newPassword = document.getElementById('newPassword').value;
-      const user = auth.currentUser;
-      user.updatePassword(newPassword).then(() => {
-        alert('Password changed successfully!');
+      if (!validate.password(newPassword)) return alert("New password doesn't meet security requirements.");
+
+      auth.currentUser.updatePassword(newPassword).then(() => {
+        alert('Password changed!');
         document.getElementById('newPassword').value = '';
-      }).catch((error) => {
-        alert(`Error: ${error.message}`);
-      });
+      }).catch(err => alert(err.message));
     }
 
-    window.onload = checkUser;
+    function logout() { auth.signOut(); }
   </script>
-  <style>
-    /* Your existing CSS goes here */
-    footer {
-      margin-top: auto;
-      padding: 10px 0;
-      text-align: center;
-      background-color: #f1f1f1;
-      width: 100%;
-    }
-  </style>
 </head>
+
 <body>
   <header>
     <nav class="navbar">
@@ -166,40 +228,93 @@
   </header>
 
   <main>
-    <div id="userDetails" class="user-details" style="display:none;">
-      <h2>User Details</h2>
-      <p><strong>Name:</strong> <span id="userName"></span></p>
-      <p><strong>Email:</strong> <span id="userEmail"></span></p>
-      <p><strong>UID:</strong> <span id="userUID"></span></p>
-      <p><strong>Address:</strong> <span id="userAddress"></span></p>
-      <p><strong>Phone:</strong> <span id="userPhone"></span></p>
-      <button class="auth-button logout-button" onclick="logout()">Logout</button>
-    </div>
-
-    <div id="loginSignupForm" class="form-container" style="display:block;">
-      <form onsubmit="login(event)">
-        <h2>Login</h2>
+    <div id="loginSignupView" class="account-container" style="display:none;">
+      <form id="loginFormElement" onsubmit="login(event)">
+        <h2>Welcome Back!</h2>
         <input type="email" id="loginEmail" placeholder="Email" required>
         <input type="password" id="loginPassword" placeholder="Password" required>
-        <button class="auth-button">Login</button>
-        <a href="#" onclick="signupForm()">Don't have an account? Sign Up</a>
+        <button type="submit">Login</button>
+
+        <p style="margin-top: 15px; font-size: 0.9rem; color: #8c7a7d;">
+          <a href="#" onclick="forgotPassword()" style="color: #ff8fab; text-decoration: none;">Forgot Password?</a>
+        </p>
+
+        <a class="toggle-link" onclick="toggleForms('signup')"
+          style="cursor:pointer; color:#ff8fab; margin-top:10px;">New here? Sign Up</a>
+      </form>
+
+      <form id="signupFormElement" onsubmit="signup(event)" style="display:none;">
+        <h2>Create Account</h2>
+        <input type="text" id="signupName" placeholder="Full Name (First & Last)" required>
+        <input type="email" id="signupEmail" placeholder="Email Address" required>
+        <input type="text" id="signupAddress" placeholder="Delivery Address" required>
+        <input type="tel" id="signupPhone" placeholder="Phone Number (10 digits)" required>
+        <input type="password" id="signupPassword" placeholder="Password (8+ chars, 1 Cap, 1 Num)" required>
+
+        <div style="display: flex; align-items: flex-start; gap: 10px; margin: 10px 0; text-align: left;">
+          <input type="checkbox" id="termsAgree" style="width: auto; margin-top: 5px;" required>
+          <label for="termsAgree" style="font-size: 0.85rem; color: #8c7a7d;">
+            I agree to the <a href="terms.html" target="_blank" style="color: #ff8fab; text-decoration: underline; font-weight: bold;">Terms & Conditions</a> and confirm my delivery address is correct.
+          </label>
+        </div>
+
+        <button type="submit">Join the Club</button>
+        <a class="toggle-link" onclick="toggleForms('login')"
+          style="cursor:pointer; color:#ff8fab; margin-top:10px;">Already have an account? Login</a>
       </form>
     </div>
 
-    <div id="updateSection" class="update-section" style="display:none;">
-      <h2>Update Profile</h2>
-      <form onsubmit="updateEmail(event)">
-        <input type="email" id="newEmail" placeholder="New Email" required>
-        <button class="auth-button">Update Email</button>
-      </form>
-      <form onsubmit="updatePhone(event)">
-        <input type="text" id="newPhone" placeholder="New Phone Number" required>
-        <button class="auth-button">Update Phone</button>
-      </form>
-      <form onsubmit="changePassword(event)">
-        <input type="password" id="newPassword" placeholder="New Password" required>
-        <button class="auth-button">Change Password</button>
-      </form>
+    <div id="profileView" class="account-container" style="display:none;">
+      <div class="profile-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h2 style="margin: 0;">Your Profile</h2>
+          <button id="editProfileBtn" onclick="toggleEditProfile()"
+            style="padding: 8px 15px; font-size: 0.9rem; width: auto;">Edit</button>
+        </div>
+
+        <div class="profile-info" id="displayProfile">
+          <p><strong>Name:</strong> <span id="userName"></span></p>
+          <p><strong>Email:</strong> <span id="userEmail"></span></p>
+          <p><strong>Address:</strong> <span id="userAddress"></span></p>
+          <p><strong>Phone:</strong> <span id="userPhone"></span></p>
+        </div>
+
+        <form id="editProfileForm" onsubmit="saveProfile(event)"
+          style="display: none; box-shadow: none; border: none; padding: 0; max-width: 100%;">
+          <input type="text" id="editName" placeholder="Full Name" required>
+          <input type="text" id="editAddress" placeholder="Address" required>
+          <input type="tel" id="editPhone" placeholder="Phone Number" required>
+          <div style="display: flex; gap: 10px;">
+            <button type="submit" style="background-color: #ff8fab; color: white; width: auto;">Save</button>
+            <button type="button" onclick="toggleEditProfile()"
+              style="background-color: #f1f1f1; color: #8c7a7d; width: auto; box-shadow: none;">Cancel</button>
+          </div>
+        </form>
+
+        <button onclick="logout()"
+          style="background-color: #ffb3c6; color: white; padding: 10px 30px; width: auto; margin-top: 20px;">Logout</button>
+      </div>
+
+      <div class="profile-card">
+        <h2>Order History</h2>
+        <div id="ordersContainer">
+          <p style="text-align:center;">Loading treats...</p>
+        </div>
+      </div>
+
+      <div class="profile-card" style="margin-bottom:40px;">
+        <h2>Update Security Settings</h2>
+        <div class="update-grid">
+          <form onsubmit="updateEmail(event)">
+            <input type="email" id="newEmail" placeholder="New Email Address" required>
+            <button type="submit">Update Email</button>
+          </form>
+          <form onsubmit="changePassword(event)">
+            <input type="password" id="newPassword" placeholder="New Password" required>
+            <button type="submit">Change Password</button>
+          </form>
+        </div>
+      </div>
     </div>
   </main>
 
@@ -207,4 +322,5 @@
     <p>&copy; 2024 Cake Crumbs. All rights reserved.</p>
   </footer>
 </body>
+
 </html>
